@@ -81,6 +81,8 @@ const firebaseConfig = {
 
 // --- 初始化 Firebase ---
 let db, auth;
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // ✅ 獲取環境 appId
+
 try {
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
@@ -866,7 +868,8 @@ export default function App() {
 
     if (db && auth.currentUser) {
       try {
-        await setDoc(doc(db, "players", finalName), {
+        // ✅ 修正路徑: /artifacts/{appId}/public/data/players/{finalName}
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', finalName), {
           name: finalName,
           score: 0,
           lesson: currentLesson,
@@ -902,7 +905,8 @@ export default function App() {
 
   useEffect(() => {
     if (!isFirebaseReady) return;
-    const qL = query(collection(db, "players"), orderBy("score", "desc"), limit(20));
+    // ✅ 修正路徑: /artifacts/{appId}/public/data/players
+    const qL = query(collection(db, 'artifacts', appId, 'public', 'data', 'players'), orderBy("score", "desc"), limit(20));
     return onSnapshot(qL, s => setLeaderboard(s.docs.map(d => ({ ...d.data(), id: d.id })).filter(u => Number(u.score) > 0)));
   }, [isFirebaseReady]);
 
@@ -912,7 +916,8 @@ export default function App() {
     if (!currentUser || !playerName) return; 
     const heartbeat = setInterval(async () => {
       try {
-        await setDoc(doc(db, "players", playerName), {
+        // ✅ 修正路徑
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', playerName), {
           lastSeen: serverTimestamp(),
           uid: currentUser.uid // 同時更新 UID
         }, { merge: true });
@@ -929,7 +934,8 @@ export default function App() {
     if (isFirebaseReady && currentUser && score >= 0 && playerName) {
       const saveToFirebase = async () => {
         try {
-          await setDoc(doc(db, "players", playerName), {
+          // ✅ 修正路徑
+          await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', playerName), {
             name: playerName,
             score: score,
             lesson: currentLesson,
@@ -1356,6 +1362,8 @@ export default function App() {
         <div className="text-center text-gray-400 text-xs pb-2 text-black">Design by Sophia Wong</div>
       </div>
       
+      {/* ... 排行榜程式碼維持不變 ... */}
+
       {/* 排行榜 */}
       {showLeaderboardModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-6 text-black">
