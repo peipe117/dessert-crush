@@ -1,0 +1,24 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 圓形背景 -->
+  <rect width="512" height="512" rx="120" fill="#E3F2FD"/>
+  
+  <!-- 杯子底座 -->
+  <path d="M156 300L176 420H336L356 300H156Z" fill="#D7CCC8" stroke="#8D6E63" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M196 300L206 420" stroke="#8D6E63" stroke-width="8" stroke-linecap="round"/>
+  <path d="M236 300L241 420" stroke="#8D6E63" stroke-width="8" stroke-linecap="round"/>
+  <path d="M276 300L271 420" stroke="#8D6E63" stroke-width="8" stroke-linecap="round"/>
+  <path d="M316 300L306 420" stroke="#8D6E63" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- 鮮奶油 -->
+  <path d="M140 300H372C372 300 380 250 340 230C360 180 300 150 256 150C212 150 152 180 172 230C132 250 140 300 140 300Z" fill="#F8BBD0" stroke="#EC407A" stroke-width="12" stroke-linejoin="round"/>
+  
+  <!-- 櫻桃 -->
+  <circle cx="256" cy="140" r="30" fill="#E53935"/>
+  <path d="M256 120C256 120 286 100 296 80" stroke="#4CAF50" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- 糖果粒 -->
+  <circle cx="200" cy="220" r="8" fill="#42A5F5"/>
+  <circle cx="300" cy="200" r="8" fill="#FFEB3B"/>
+  <circle cx="260" cy="250" r="8" fill="#AB47BC"/>
+  <circle cx="180" cy="270" r="8" fill="#FFA726"/>
+</svg>

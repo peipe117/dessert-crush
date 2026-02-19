@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+  <head>
+<link rel="manifest" href="/manifest.json" />
+
+    <meta charset="UTF-8" />
+    <!-- 網站圖示 (請確保 public 資料夾有 favicon.svg) -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    
+    <!-- 關鍵設定：禁止手機雙指縮放，確保遊戲操作順暢 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <!-- 瀏覽器網址列顏色 (馬卡龍粉) -->
+    <meta name="theme-color" content="#FFF0F5" />
+    <meta name="description" content="華語甜點碰碰樂 - 快樂學中文！結合生字與甜點的消除遊戲。" />
+    
+    <!-- iOS PWA 專用設定 (加入主畫面後隱藏網址列) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="甜點碰碰樂">
+    
+    <title>華語甜點碰碰樂</title>
+    
+    <!-- 引入 PWA 設定檔 (請確保 public 資料夾有 manifest.json) -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- ✨ 美化：引入可愛的圓體字型 (M PLUS Rounded 1c) ✨ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+  </head>
+  
+  <!-- 設定預設背景色與字型，防止載入時閃爍 -->
+  <body style="background-color: #FFF0F5; margin: 0; touch-action: manipulation; font-family: 'M PLUS Rounded 1c', sans-serif;">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
