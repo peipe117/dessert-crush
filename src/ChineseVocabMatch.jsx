@@ -9,10 +9,10 @@ import {
 import { initializeApp } from "firebase/app";
 import { 
   getFirestore, collection, onSnapshot, 
-  query, orderBy, limit, doc, setDoc, updateDoc, 
+  doc, setDoc, updateDoc, getDoc,
   serverTimestamp 
 } from "firebase/firestore";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "firebase/auth";
 
 // ----------------------------------------------------------------------
 // ⚠️ 全域配置
@@ -63,10 +63,8 @@ const DISTINCT_PALETTE = [
   { bg: "#BBDEFB", border: "#1E88E5", text: "#0D47A1" }, // 6. 藍 (Blue)
   { bg: "#E1BEE7", border: "#8E24AA", text: "#4A148C" }, // 7. 紫 (Purple)
   { bg: "#D7CCC8", border: "#8D6E63", text: "#3E2723" }, // 8. 棕 (Brown)
-  // 移除灰藍色 (太暗)
   { bg: "#F0F4C3", border: "#AFB42B", text: "#827717" }, // 9. 萊姆 (Lime) - 與黃/綠區隔
   { bg: "#F8BBD0", border: "#EC407A", text: "#880E4F" }, // 10. 粉紅 (Pink) - 與紅區隔
-  // 移除藍綠色 (易與青色混淆)
 ];
 
 // ✅ 請使用您自己的 Firebase Config ✅
@@ -84,7 +82,8 @@ let db, auth;
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // ✅ 獲取環境 appId
 
 try {
-  const app = initializeApp(firebaseConfig);
+  const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig;
+  const app = initializeApp(config);
   db = getFirestore(app);
   auth = getAuth(app);
 } catch (e) {
@@ -279,7 +278,7 @@ export default function App() {
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false); 
 
-  // ✅ 自訂題目相關狀態 ✅
+  // ✅ 自訂題目相關狀態
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [customText, setCustomText] = useState("");
 
@@ -291,7 +290,6 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
-  const [isFirebaseReady, setIsFirebaseReady] = useState(false);
 
   const [bombCount, setBombCount] = useState(0);
   const [candyCount, setCandyCount] = useState(0);
@@ -519,7 +517,7 @@ export default function App() {
     
     setGameStages(stages);
     setCurrentStageIndex(0);
-    setScore(0);
+    // ⚠️ 移除 setScore(0) -> 讓分數可以持續累加，不論玩哪一關！
     setCombo(0);
     // 寶物不歸零
     setIsProcessing(false);
@@ -857,24 +855,33 @@ export default function App() {
     }
   };
 
+  // ✅ 修復登入邏輯：抓取舊有分數，避免覆蓋
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
-    // ✅ 修正：使用 inputName 來設定
     const finalName = inputName.trim();
     if (!finalName) return;
     
     localStorage.setItem('wordcrush_player_name', finalName);
-    setPlayerName(finalName); // ✅ 確認玩家名稱，這會觸發 Effect
+    setPlayerName(finalName);
 
-    if (db && auth.currentUser) {
+    if (db && currentUser) {
       try {
-        // ✅ 修正路徑: /artifacts/{appId}/public/data/players/{finalName}
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', finalName), {
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        let currentScore = score;
+        
+        // 如果這個帳號之前有玩過，繼承他的最高分數
+        if (docSnap.exists()) {
+          currentScore = Math.max(currentScore, docSnap.data().score || 0);
+          setScore(currentScore);
+        }
+        
+        await setDoc(docRef, {
           name: finalName,
-          score: 0,
+          score: currentScore,
           lesson: currentLesson,
           lastSeen: serverTimestamp(),
-          uid: auth.currentUser.uid 
+          uid: currentUser.uid 
         }, { merge: true });
       } catch (err) { console.error(err); }
     }
@@ -890,36 +897,55 @@ export default function App() {
   };
 
   const goToNextLevel = () => {
-    // 邏輯：0(生肖) -> 1 -> 2 ... -> 12 -> 13 -> 0 循環
     const nextLesson = currentLesson < 13 ? currentLesson + 1 : 0;
     setCurrentLesson(nextLesson);
     startNewLesson(nextLesson, false); 
   };
 
+  // ✅ 正確的身分驗證流程
   useEffect(() => {
-    if (db && auth) {
-      signInAnonymously(auth).then(() => setIsFirebaseReady(true)).catch(e => console.error(e));
-      return onAuthStateChanged(auth, u => setCurrentUser(u));
-    }
+    if (!auth) return;
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (e) {
+        console.error("Auth init failed:", e);
+      }
+    };
+    initAuth();
+    
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
   }, []);
 
+  // ✅ 讀取排行榜資料 (在前端進行排序，符合環境限制)
   useEffect(() => {
-    if (!isFirebaseReady) return;
-    // ✅ 修正路徑: /artifacts/{appId}/public/data/players
-    const qL = query(collection(db, 'artifacts', appId, 'public', 'data', 'players'), orderBy("score", "desc"), limit(20));
-    return onSnapshot(qL, s => setLeaderboard(s.docs.map(d => ({ ...d.data(), id: d.id })).filter(u => Number(u.score) > 0)));
-  }, [isFirebaseReady]);
+    if (!currentUser || !db) return;
+    const qL = collection(db, 'artifacts', appId, 'public', 'data', 'players');
+    const unsubscribe = onSnapshot(qL, (s) => {
+      let players = s.docs.map(d => ({ ...d.data(), id: d.id })).filter(u => Number(u.score) > 0);
+      players.sort((a, b) => Number(b.score) - Number(a.score)); // 本地排序
+      setLeaderboard(players.slice(0, 20)); // 取前 20 名
+    }, (error) => {
+      console.error("讀取排行榜失敗:", error);
+    });
+    return () => unsubscribe();
+  }, [currentUser]);
 
-  // ✅ 自動心跳：使用 playerName 更新時間 ✅
+  // ✅ 自動心跳：更新最後上線時間
   useEffect(() => {
-    // 只有當 playerName (已確認的名字) 存在時才執行心跳
-    if (!currentUser || !playerName) return; 
+    if (!currentUser || !playerName || !db) return; 
     const heartbeat = setInterval(async () => {
       try {
-        // ✅ 修正路徑
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', playerName), {
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', currentUser.uid), {
           lastSeen: serverTimestamp(),
-          uid: currentUser.uid // 同時更新 UID
+          uid: currentUser.uid
         }, { merge: true });
       } catch (e) {
         console.error("Heartbeat failed", e);
@@ -928,16 +954,14 @@ export default function App() {
     return () => clearInterval(heartbeat);
   }, [currentUser, playerName]);
 
-  // 自動同步分數 (使用 playerName)
+  // ✅ 自動同步分數 (避免分數變成 0 時覆蓋)
   useEffect(() => {
-    // 只有當 playerName (已確認的名字) 存在時才執行同步
-    if (isFirebaseReady && currentUser && score >= 0 && playerName) {
+    if (db && currentUser && score > 0 && playerName) {
       const saveToFirebase = async () => {
         try {
-          // ✅ 修正路徑
-          await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', playerName), {
+          await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', currentUser.uid), {
             name: playerName,
-            score: score,
+            score: score, // 持續累加，更新到資料庫
             lesson: currentLesson,
             lastSeen: serverTimestamp(),
             uid: currentUser.uid
@@ -948,19 +972,17 @@ export default function App() {
       };
       saveToFirebase();
     }
-  }, [score, currentLesson, currentUser, isFirebaseReady, playerName]);
+  }, [score, currentLesson, currentUser, playerName]);
 
   useEffect(() => {
     if (gameState === 'playing' && levelTargets.length > 0) {
         if (levelTargets.every(t => Number(t.count) === 0)) {
             if (currentStageIndex < gameStages.length - 1) { 
                 setGameState('stage_cleared'); 
-                // ✅ 修正：傳入 audioEnabled
                 playSound('win', audioEnabled); 
             } 
             else { 
                 setGameState('won'); 
-                // ✅ 修正：傳入 audioEnabled
                 playSound('win', audioEnabled); 
             }
         } else if (Number(moves) <= 0 && !isProcessing) {
@@ -982,7 +1004,6 @@ export default function App() {
           <h1 className="text-4xl font-black mb-2 text-pink-600">華語甜點碰碰樂</h1>
           <p className="text-gray-500 mb-8 font-bold text-black">快來輸入名字，開啟馬卡龍課程！</p>
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* ✅ 修正：輸入框綁定 inputName，只有送出時才設定 playerName */}
             <input type="text" value={String(inputName)} onChange={(e) => setInputName(e.target.value)} placeholder="你的名字..."
                    className="w-full px-6 py-4 rounded-2xl border-4 border-pink-50 mb-2 text-xl focus:border-pink-300 focus:outline-none bg-gray-50 text-black placeholder-gray-300" required />
             <button type="submit" className="w-full bg-pink-500 text-white font-black py-4 rounded-2xl text-xl active:translate-y-1">
@@ -1079,7 +1100,6 @@ export default function App() {
         {/* Header */}
         <div className="w-full bg-white p-4 mb-4 flex flex-col gap-4 rounded-[32px] border-2 border-white shadow-sm text-black z-10 relative">
           <div className="flex justify-between items-center w-full px-2 text-black gap-2">
-            {/* ✅ 修正：移除中間的分隔線，並縮小 gap 與 padding 以節省空間 */}
             <div className="flex gap-2 items-center bg-gray-50 px-2 py-2 rounded-[24px] flex-1 relative overflow-hidden">
               <span className="text-[10px] font-bold text-gray-400 uppercase flex flex-col items-center leading-none shrink-0">
                 <Target size={14} className="mb-0.5 text-pink-400"/>目標
@@ -1101,7 +1121,6 @@ export default function App() {
                         <div className="w-10 h-10 border-2 rounded-xl flex items-center justify-center p-0.5" 
                              style={{backgroundColor: style.backgroundColor, borderColor: style.borderColor}}>
                           <div className="w-full h-full border rounded-lg flex items-center justify-center" style={{borderColor: style.borderColor}}>
-                            {/* ✅ 修正文字顏色 (style.color) ✅ */}
                             <span className="text-xl font-black" style={{color: style.color}}>{String(t.char)}</span>
                           </div>
                         </div>
@@ -1112,7 +1131,7 @@ export default function App() {
                 })}
               </div>
             </div>
-            {/* ✅ SCORE 移到這裡，稍微縮小最小寬度 */}
+            {/* SCORE */}
             <div className="flex flex-col items-center justify-center bg-pink-50 px-3 py-2 rounded-[24px] shrink-0 min-w-[70px] h-[60px]">
                 <div className="text-[10px] text-pink-400 font-black uppercase leading-none mb-1">Score</div>
                 <div className="text-xl font-black text-pink-600 leading-none">{Number(score)}</div>
@@ -1137,13 +1156,11 @@ export default function App() {
                 </div>
               </div>
             </div>
-            {/* ✅ 分享、靜音、全螢幕、獎盃 (分數已移除) ✅ */}
             <div className="flex items-center gap-2">
               <button onClick={handleShare} className="p-2 bg-blue-100 text-blue-500 rounded-xl hover:bg-blue-200 transition-all active:scale-90 shadow-sm"><Share2 size={18} /></button>
               <button onClick={() => setAudioEnabled(!audioEnabled)} className={`p-2 rounded-xl transition-all active:scale-90 shadow-sm ${audioEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
                 {audioEnabled ? <Volume2 size={18}/> : <VolumeX size={18}/>}
               </button>
-              {/* ✅ 新增：全螢幕按鈕 ✅ */}
               <button onClick={toggleFullscreen} className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all active:scale-90 shadow-sm">
                 {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
               </button>
@@ -1204,7 +1221,7 @@ export default function App() {
                     finalTransform = `translate(${hint.dc * 100}%, ${hint.dr * 100}%) scale(1.05)`;
                 }
 
-                // 道具 - ✅ 改用彩色 Emoji ✅
+                // 道具
                 if (cell.char === ITEM_BOMB || cell.char === ITEM_CANDY) {
                     return (
                       <button key={cell.id} onClick={() => handleTileClick(r, c)} onMouseEnter={() => setHoveredTile({r, c})}
@@ -1215,7 +1232,6 @@ export default function App() {
                         }}>
                          <div className="w-full h-full flex items-center justify-center rounded-2xl text-4xl shadow-lg border-2 border-white"
                              style={{ backgroundColor: cell.char === ITEM_BOMB ? '#FFCDD2' : '#E1BEE7' }}>
-                             {/* ✅ 修正：使用彩色 Emoji ✅ */}
                              {cell.char === ITEM_BOMB ? '💣' : '🍬'}
                          </div>
                       </button>
@@ -1247,7 +1263,6 @@ export default function App() {
                       <div className="w-full h-full border rounded-xl flex items-center justify-center" 
                            style={{borderColor: charStyle.borderColor}}>
                         {previewOverlay}
-                        {/* ✅ 修正文字顏色 (style.color) ✅ */}
                         <span 
                           className={`font-black select-none pointer-events-none relative z-0 transition-transform ${Number(currentLesson) === 0 ? 'text-4xl md:text-5xl' : 'text-3xl md:text-4xl'}`}
                           style={{ color: charStyle.color }}
@@ -1271,7 +1286,6 @@ export default function App() {
                   {gameState === 'won' ? '甜點大師！' : gameState === 'stage_cleared' ? '恭喜晉級！' : '下次再來！'}
                 </h2>
                 <div className="text-gray-500 mb-8 font-bold text-lg leading-relaxed">
-                    {/* ✅ 修正：文字排版，加入 <br/> 換行 ✅ */}
                     {gameState === 'won' ? (
                         <>
                             {playerName || '你'} 已經認識{Number(currentLesson) === 0 ? " 12生肖 所有動物" : (Number(currentLesson) === 13 ? " 所有甜點" : (Number(currentLesson) === 999 ? " 自訂題目的所有生字" : `第 ${currentLesson} 課所有生字`))}了！
@@ -1295,7 +1309,6 @@ export default function App() {
                         <button onClick={() => startNewLesson(currentLesson, false)} className="col-span-1 bg-gray-100 text-gray-600 py-3 rounded-2xl font-black hover:bg-gray-200">再玩一次</button>
                         <button onClick={goToNextLevel} className="col-span-1 bg-gradient-to-r from-blue-400 to-blue-500 text-white py-3 rounded-2xl font-black shadow-lg hover:brightness-110 active:translate-y-1">挑戰下一課</button>
                         
-                        {/* ✅ 進階遊戲最顯眼 (Row 2, 全寬) ✅ */}
                         <button onClick={() => startNewLesson(currentLesson, true)} className="col-span-2 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-4 rounded-2xl font-black shadow-[0_6px_0_#db2777] hover:brightness-110 active:translate-y-1 active:shadow-none transition-all text-xl flex items-center justify-center gap-2"><Snowflake size={20}/> 挑戰進階遊戲 (冰塊模式)</button>
                         
                         <button onClick={() => setGameState('welcome')} className="col-span-2 bg-white border-2 border-gray-100 text-gray-400 py-3 rounded-2xl font-bold hover:text-gray-600 flex items-center justify-center gap-2"><Home size={18}/> 結束遊戲</button>
@@ -1312,7 +1325,7 @@ export default function App() {
           )}
         </div>
 
-        {/* Toolbar - ✅ 修正層級：z-20 確保浮在背景之上 ✅ */}
+        {/* Toolbar */}
         <div className="w-full px-2 pb-8 flex justify-between items-center gap-4 text-black relative z-20">
           <button onClick={() => bombCount > 0 && setActiveTool(activeTool === 'bomb' ? null : 'bomb')}
                   className={`flex-1 py-4 rounded-[28px] flex flex-col items-center transition-all ${activeTool === 'bomb' ? 'bg-red-100 text-red-500 scale-105 border-red-300 border-2 shadow-sm' : 'bg-white border-gray-100 border-2 shadow-sm text-black'}`}>
@@ -1334,7 +1347,7 @@ export default function App() {
           </button>
         </div>
         
-        {/* ✅ 自訂題目彈窗 ✅ */}
+        {/* 自訂題目彈窗 */}
         {showCustomModal && (
             <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowCustomModal(false)}>
                 <div className="bg-white p-6 rounded-[30px] shadow-2xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
@@ -1362,8 +1375,6 @@ export default function App() {
         <div className="text-center text-gray-400 text-xs pb-2 text-black">Design by Sophia Wong</div>
       </div>
       
-      {/* ... 排行榜程式碼維持不變 ... */}
-
       {/* 排行榜 */}
       {showLeaderboardModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-6 text-black">
@@ -1377,12 +1388,10 @@ export default function App() {
                 <div key={user.id} className={`flex items-center justify-between p-5 rounded-[30px] transition-all ${user.id === (currentUser?.uid || '') ? 'bg-pink-100' : 'bg-gray-50'}`}>
                   <div className="flex flex-col text-black">
                     <div className="flex items-center gap-4 text-black">
-                      {/* ✅ 新增：在線狀態指示燈 (🟢) ✅ */}
                       <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black ${idx === 0 ? 'bg-yellow-400 text-white' : 'bg-white text-gray-400'}`}>{idx + 1}</span>
                       <div className="flex flex-col">
                           <span className="font-bold text-gray-700 text-black flex items-center gap-2">
                               {String(user.name)}
-                              {/* 這裡的判斷邏輯非常關鍵 */}
                               {((currentUser && user.id === currentUser.uid) || (user.lastSeen && typeof user.lastSeen.toMillis === 'function' && (Date.now() - user.lastSeen.toMillis()) < 5 * 60 * 1000)) && (
                                   <span className="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full flex items-center gap-1">
                                       <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> 在線
