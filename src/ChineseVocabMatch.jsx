@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { 
   Sparkles, RefreshCw, Trophy, BookOpen, Lightbulb, Share2, 
   Volume2, VolumeX, Bomb, Candy, Target, ArrowRight, X, Star, Plus, Snowflake, Home, Repeat,
-  Cake, Smartphone, Download, PenTool, HelpCircle, MousePointer2
+  Cake, Smartphone, Download, PenTool, HelpCircle, MousePointer2, Maximize, Minimize
 } from 'lucide-react';
 
 // Firebase Imports
@@ -86,7 +86,9 @@ try {
 // --- 音效工具 ---
 const audioCtx = typeof window !== 'undefined' ? new (window.AudioContext || window.webkitAudioContext)() : null;
 
-const playSound = (type) => {
+// ✅ 修改：增加 isEnabled 參數，控制是否播放音效
+const playSound = (type, isEnabled = true) => {
+  if (!isEnabled) return; // 如果靜音，直接返回
   if (!audioCtx) return;
   if (audioCtx.state === 'suspended') audioCtx.resume();
   const osc = audioCtx.createOscillator();
@@ -247,6 +249,7 @@ export default function App() {
   const [hoveredTile, setHoveredTile] = useState(null); 
   const [showConfetti, setShowConfetti] = useState(false);
   const [lastTargetHit, setLastTargetHit] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const [gameStages, setGameStages] = useState([]); 
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
@@ -260,9 +263,12 @@ export default function App() {
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [customText, setCustomText] = useState("");
 
-  const [playerName, setPlayerName] = useState(() => {
+  // ✅ 修正：新增 inputName 狀態，區分「輸入中的名字」與「已確認的玩家名字」
+  const [inputName, setInputName] = useState(() => {
     return typeof window !== 'undefined' ? (localStorage.getItem('wordcrush_player_name') || "") : "";
   });
+  const [playerName, setPlayerName] = useState(""); // 實際遊戲中使用的名字 (確認後才設定)
+
   const [currentUser, setCurrentUser] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
@@ -273,6 +279,27 @@ export default function App() {
   const [activeTool, setActiveTool] = useState(null);
 
   // --- Logic Helpers ---
+
+  // 監聽全螢幕變化
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((e) => {
+        console.error("無法進入全螢幕模式", e);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   const findMatches = useCallback((currentBoard) => {
     const matches = [];
@@ -462,7 +489,9 @@ export default function App() {
     });
     setColorMap(newGlobalColorMap);
 
-    const chunkSize = (lesson === 13 || allCharsInLesson.length === 8) ? 4 : 5;
+    // ✅ 修改這裡：針對 Lesson 0 (12生肖) 設定 chunkSize 為 4，這樣 12/4 = 3 關
+    const chunkSize = (lesson === 0 || lesson === 13 || allCharsInLesson.length === 8) ? 4 : 5;
+    
     const stages = [];
     for (let i = 0; i < allCharsInLesson.length; i += chunkSize) { 
         stages.push(allCharsInLesson.slice(i, i + chunkSize)); 
@@ -517,13 +546,15 @@ export default function App() {
         else if (matches.length >= 5) setMatchMessage("GREAT!");
         else setMatchMessage("Good!");
         setTimeout(() => setMatchMessage(""), 1200);
-        playSound('match3');
+        // ✅ 修正：傳入 audioEnabled
+        playSound('match3', audioEnabled);
         const firstMatchChar = tempBoard[matches[0].r][matches[0].c].char;
         if (firstMatchChar !== ITEM_BOMB && firstMatchChar !== ITEM_CANDY) {
             speakText(firstMatchChar, audioEnabled);
         }
       } else {
-        playSound('combo');
+        // ✅ 修正：傳入 audioEnabled
+        playSound('combo', audioEnabled);
         showGameMessage(`${currentCombo} COMBO!`, 1000);
       }
 
@@ -549,7 +580,8 @@ export default function App() {
         }
       });
       
-      if (iceBroken) playSound('ice');
+      // ✅ 修正：傳入 audioEnabled
+      if (iceBroken) playSound('ice', audioEnabled);
 
       setBoard([...tempBoard]);
       await new Promise(r => setTimeout(r, 400)); 
@@ -586,7 +618,8 @@ export default function App() {
             setLastTargetHit(t.char);
             setTimeout(() => setLastTargetHit(null), 600);
             if (t.count - foundCount <= 0 && t.count > 0) {
-                playSound('win');
+                // ✅ 修正：傳入 audioEnabled
+                playSound('win', audioEnabled);
                 setShowConfetti(true);
                 setTimeout(() => setShowConfetti(false), 2500);
             }
@@ -603,7 +636,8 @@ export default function App() {
     const clickedCell = board[r][c];
 
     if (clickedCell.char === ITEM_BOMB) {
-        playSound('collect');
+        // ✅ 修正：傳入 audioEnabled
+        playSound('collect', audioEnabled);
         setBombCount(prev => prev + 1);
         const newBoard = JSON.parse(JSON.stringify(board));
         newBoard[r][c].char = null;
@@ -618,7 +652,8 @@ export default function App() {
         return;
     }
     if (clickedCell.char === ITEM_CANDY) {
-        playSound('collect');
+        // ✅ 修正：傳入 audioEnabled
+        playSound('collect', audioEnabled);
         setCandyCount(prev => prev + 1);
         const newBoard = JSON.parse(JSON.stringify(board));
         newBoard[r][c].char = null;
@@ -634,7 +669,9 @@ export default function App() {
     }
 
     if (activeTool === 'bomb') {
-      setBombCount(prev => prev - 1); setActiveTool(null); setHoveredTile(null); playSound('bomb');
+      setBombCount(prev => prev - 1); setActiveTool(null); setHoveredTile(null); 
+      // ✅ 修正：傳入 audioEnabled
+      playSound('bomb', audioEnabled);
       let tempBoard = JSON.parse(JSON.stringify(board));
       const exploded = [];
       for(let i = r-1; i <= r+1; i++) {
@@ -675,7 +712,10 @@ export default function App() {
       const target = board[r][c].char; 
       if (target === ITEM_BOMB || target === ITEM_CANDY) return; 
 
-      setCandyCount(prev => prev - 1); setActiveTool(null); playSound('win'); speakText(target, audioEnabled);
+      setCandyCount(prev => prev - 1); setActiveTool(null); 
+      // ✅ 修正：傳入 audioEnabled
+      playSound('win', audioEnabled); 
+      speakText(target, audioEnabled);
       let tempBoard = JSON.parse(JSON.stringify(board));
       let count = 0;
       for(let rr=0; rr<GRID_SIZE; rr++) {
@@ -707,7 +747,12 @@ export default function App() {
     speakText(board[r][c].char, audioEnabled);
     if (hintTiles.length > 0) setHintTiles([]);
 
-    if (!selectedTile) { setSelectedTile({ r, c }); playSound('select'); return; }
+    if (!selectedTile) { 
+        setSelectedTile({ r, c }); 
+        // ✅ 修正：傳入 audioEnabled
+        playSound('select', audioEnabled); 
+        return; 
+    }
     const { r: r1, c: c1 } = selectedTile;
     if (r1 === r && c1 === c) { setSelectedTile(null); return; }
 
@@ -731,7 +776,9 @@ export default function App() {
         setTimeout(() => setBoard(board), 300);
       }
     } else {
-      setSelectedTile({ r, c }); playSound('select');
+      setSelectedTile({ r, c }); 
+      // ✅ 修正：傳入 audioEnabled
+      playSound('select', audioEnabled);
     }
   };
 
@@ -777,13 +824,17 @@ export default function App() {
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
-    if (!playerName.trim()) return;
-    localStorage.setItem('wordcrush_player_name', playerName.trim());
+    // ✅ 修正：使用 inputName 來設定
+    const finalName = inputName.trim();
+    if (!finalName) return;
+    
+    localStorage.setItem('wordcrush_player_name', finalName);
+    setPlayerName(finalName); // ✅ 確認玩家名稱，這會觸發 Effect
+
     if (db && auth.currentUser) {
       try {
-        // ✅ 修正：使用 playerName 當作 document ID ✅
-        await setDoc(doc(db, "players", playerName.trim()), {
-          name: playerName.trim(),
+        await setDoc(doc(db, "players", finalName), {
+          name: finalName,
           score: 0,
           lesson: currentLesson,
           lastSeen: serverTimestamp(),
@@ -824,6 +875,7 @@ export default function App() {
 
   // ✅ 自動心跳：使用 playerName 更新時間 ✅
   useEffect(() => {
+    // 只有當 playerName (已確認的名字) 存在時才執行心跳
     if (!currentUser || !playerName) return; 
     const heartbeat = setInterval(async () => {
       try {
@@ -840,6 +892,7 @@ export default function App() {
 
   // 自動同步分數 (使用 playerName)
   useEffect(() => {
+    // 只有當 playerName (已確認的名字) 存在時才執行同步
     if (isFirebaseReady && currentUser && score >= 0 && playerName) {
       const saveToFirebase = async () => {
         try {
@@ -861,13 +914,21 @@ export default function App() {
   useEffect(() => {
     if (gameState === 'playing' && levelTargets.length > 0) {
         if (levelTargets.every(t => Number(t.count) === 0)) {
-            if (currentStageIndex < gameStages.length - 1) { setGameState('stage_cleared'); playSound('win'); } 
-            else { setGameState('won'); playSound('win'); }
+            if (currentStageIndex < gameStages.length - 1) { 
+                setGameState('stage_cleared'); 
+                // ✅ 修正：傳入 audioEnabled
+                playSound('win', audioEnabled); 
+            } 
+            else { 
+                setGameState('won'); 
+                // ✅ 修正：傳入 audioEnabled
+                playSound('win', audioEnabled); 
+            }
         } else if (Number(moves) <= 0 && !isProcessing) {
             setGameState('lost');
         }
     }
-  }, [levelTargets, gameState, currentStageIndex, gameStages, moves, isProcessing]);
+  }, [levelTargets, gameState, currentStageIndex, gameStages, moves, isProcessing, audioEnabled]);
 
   if (gameState === 'welcome') {
     return (
@@ -882,7 +943,8 @@ export default function App() {
           <h1 className="text-4xl font-black mb-2 text-pink-600">華語甜點碰碰樂</h1>
           <p className="text-gray-500 mb-8 font-bold text-black">快來輸入名字，開啟馬卡龍課程！</p>
           <form onSubmit={handleLogin} className="space-y-4">
-            <input type="text" value={String(playerName)} onChange={(e) => setPlayerName(e.target.value)} placeholder="你的名字..."
+            {/* ✅ 修正：輸入框綁定 inputName，只有送出時才設定 playerName */}
+            <input type="text" value={String(inputName)} onChange={(e) => setInputName(e.target.value)} placeholder="你的名字..."
                    className="w-full px-6 py-4 rounded-2xl border-4 border-pink-50 mb-2 text-xl focus:border-pink-300 focus:outline-none bg-gray-50 text-black placeholder-gray-300" required />
             <button type="submit" className="w-full bg-pink-500 text-white font-black py-4 rounded-2xl text-xl active:translate-y-1">
                 開始上課！
@@ -997,7 +1059,7 @@ export default function App() {
                         </div>
                       ) : (
                         <div className="w-10 h-10 border-2 rounded-xl flex items-center justify-center p-0.5" 
-                            style={{backgroundColor: style.backgroundColor, borderColor: style.borderColor}}>
+                             style={{backgroundColor: style.backgroundColor, borderColor: style.borderColor}}>
                           <div className="w-full h-full border rounded-lg flex items-center justify-center" style={{borderColor: style.borderColor}}>
                             {/* ✅ 修正文字顏色 (style.color) ✅ */}
                             <span className="text-xl font-black" style={{color: style.color}}>{String(t.char)}</span>
@@ -1031,11 +1093,15 @@ export default function App() {
                 </div>
               </div>
             </div>
-            {/* ✅ 分享、靜音、獎盃(新位置)、分數 ✅ */}
+            {/* ✅ 分享、靜音、全螢幕、獎盃(新位置)、分數 ✅ */}
             <div className="flex items-center gap-2">
               <button onClick={handleShare} className="p-2 bg-blue-100 text-blue-500 rounded-xl hover:bg-blue-200 transition-all active:scale-90 shadow-sm"><Share2 size={18} /></button>
               <button onClick={() => setAudioEnabled(!audioEnabled)} className={`p-2 rounded-xl transition-all active:scale-90 shadow-sm ${audioEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
                 {audioEnabled ? <Volume2 size={18}/> : <VolumeX size={18}/>}
+              </button>
+              {/* ✅ 新增：全螢幕按鈕 ✅ */}
+              <button onClick={toggleFullscreen} className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all active:scale-90 shadow-sm">
+                {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
               </button>
               <button onClick={() => setShowLeaderboardModal(true)} className="p-2 bg-yellow-100 text-yellow-700 rounded-xl hover:bg-yellow-200 transition-all active:scale-90 shadow-sm">
                 <Trophy size={18} />
