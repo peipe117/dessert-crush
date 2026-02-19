@@ -24,6 +24,7 @@ const ITEM_CANDY = '$$CANDY$$';
 
 // 預設課程資料
 let LESSON_DATA = {
+  0: "🐭🐮🐯🐰🐲🐍🐴🐑🐵🐔🐶🐷", // 12生肖
   1: "新同學自己年跟比",
   2: "外公以前工作班後",
   3: "去近買東西魚還可",
@@ -35,8 +36,7 @@ let LESSON_DATA = {
   9: "南北方裡校門口因為所",
   10: "本著退休次旅行法國",
   11: "動物園老希望但胖真長",
-  12: "久話高課寫沒題定意思",
-  13: "🐭🐮🐯🐰🐲🐍🐴🐑🐵🐔🐶🐷" 
+  12: "久話高課寫沒題定意思"
 };
 
 const ZODIAC_MAP = {
@@ -189,7 +189,7 @@ const ConfettiEffect = () => {
   );
 };
 
-// --- 優化：漂浮甜點背景 (z-index: 0) ---
+// --- 優化：漂浮甜點背景 (z-index: -1) ---
 const FloatingDessertBackground = () => {
     const items = useMemo(() => {
         return Array.from({ length: 15 }).map((_, i) => ({
@@ -204,7 +204,8 @@ const FloatingDessertBackground = () => {
     }, []);
 
     return (
-        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+        // ✅ 修正：使用 z-[-1] 確保在最底層 ✅
+        <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden select-none">
             {items.map((item) => (
                 <div 
                     key={item.id}
@@ -231,7 +232,7 @@ const FloatingDessertBackground = () => {
 // ----------------------------------------------------------------------
 
 export default function App() {
-  const [currentLesson, setCurrentLesson] = useState(1);
+  const [currentLesson, setCurrentLesson] = useState(0); 
   const [board, setBoard] = useState([]);
   const [activeChars, setActiveChars] = useState([]); 
   const [colorMap, setColorMap] = useState({}); 
@@ -256,7 +257,6 @@ export default function App() {
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false); 
 
-  // ✅ 自訂題目相關狀態 ✅
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [customText, setCustomText] = useState("");
 
@@ -472,6 +472,7 @@ export default function App() {
     setCurrentStageIndex(0);
     setScore(0);
     setCombo(0);
+    // 寶物不歸零
     setIsProcessing(false);
     setSelectedTile(null);
     setHintTiles([]);
@@ -990,7 +991,7 @@ export default function App() {
             <div className="flex items-center gap-3">
               <select value={currentLesson} onChange={(e) => { const n = Number(e.target.value); setCurrentLesson(n); startNewLesson(n, false); }}
                       className="bg-gray-100 border-2 border-gray-100 rounded-2xl px-4 py-2 font-black text-pink-600 text-sm outline-none">
-                {Object.keys(LESSON_DATA).map(k => <option key={k} value={k}>{Number(k) === 13 ? "🐯 12生肖" : (Number(k) === 999 ? "✏️ 自訂題目" : `第 ${k} 課`)}</option>)}
+                {Object.keys(LESSON_DATA).map(k => <option key={k} value={k}>{Number(k) === 0 ? "12生肖" : (Number(k) === 999 ? "✏️ 自訂題目" : `第 ${k} 課`)}</option>)}
               </select>
               <div className="flex items-center gap-1">
                 <button 
@@ -1116,7 +1117,7 @@ export default function App() {
                         {previewOverlay}
                         {/* ✅ 修正文字顏色 (style.color) ✅ */}
                         <span 
-                          className={`font-black select-none pointer-events-none relative z-0 transition-transform ${Number(currentLesson) === 13 ? 'text-4xl md:text-5xl' : 'text-3xl md:text-4xl'}`}
+                          className={`font-black select-none pointer-events-none relative z-0 transition-transform ${Number(currentLesson) === 0 ? 'text-4xl md:text-5xl' : 'text-3xl md:text-4xl'}`}
                           style={{ color: charStyle.color }}
                         >
                           {String(cell.char)}
@@ -1137,13 +1138,20 @@ export default function App() {
                 <h2 className="text-3xl font-black text-pink-600 mb-2">
                   {gameState === 'won' ? '甜點大師！' : gameState === 'stage_cleared' ? '恭喜晉級！' : '下次再來！'}
                 </h2>
-                <p className="text-gray-500 mb-8 font-bold text-lg">
-                    {gameState === 'won' 
-                        ? `${playerName || '你'} 已經認識${Number(currentLesson) === 13 ? " 12生肖 所有動物" : `第 ${currentLesson} 課所有生字`}了！` 
-                        : gameState === 'stage_cleared' 
-                        ? `${playerName || '你'} 挑戰成功！準備進入下一小關嗎？`
-                        : '再試一次，你一定可以的！'}
-                </p>
+                <div className="text-gray-500 mb-8 font-bold text-lg leading-relaxed">
+                    {/* ✅ 修正：文字排版，加入 <br/> 換行 ✅ */}
+                    {gameState === 'won' ? (
+                        <>
+                            {playerName || '你'} 已經認識{Number(currentLesson) === 0 ? " 12生肖 所有動物" : (Number(currentLesson) === 999 ? " 自訂題目的所有生字" : `第 ${currentLesson} 課所有生字`)}了！
+                        </>
+                    ) : gameState === 'stage_cleared' ? (
+                        <>
+                           {playerName || '你'} 挑戰成功！<br/>準備進入下一小關嗎？
+                        </>
+                    ) : (
+                        '再試一次，你一定可以的！'
+                    )}
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   {gameState === 'stage_cleared' && (
                       <button onClick={handleNextStage} className="col-span-2 w-full bg-gradient-to-r from-green-400 to-green-500 text-white py-5 rounded-[25px] font-black shadow-[0_6px_0_#16a34a] hover:brightness-110 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3 text-xl">
@@ -1153,7 +1161,7 @@ export default function App() {
                   {gameState === 'won' && (
                       <>
                         <button onClick={() => startNewLesson(currentLesson, false)} className="col-span-1 bg-gray-100 text-gray-600 py-3 rounded-2xl font-black hover:bg-gray-200">再玩一次</button>
-                        <button onClick={goToNextLevel} className="col-span-1 bg-blue-500 text-white py-3 rounded-2xl font-black shadow-lg hover:brightness-110 active:translate-y-1">挑戰下一課</button>
+                        <button onClick={goToNextLevel} className="col-span-1 bg-gradient-to-r from-blue-400 to-blue-500 text-white py-3 rounded-2xl font-black shadow-lg hover:brightness-110 active:translate-y-1">挑戰下一課</button>
                         
                         {/* ✅ 進階遊戲最顯眼 (Row 2, 全寬) ✅ */}
                         <button onClick={() => startNewLesson(currentLesson, true)} className="col-span-2 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-4 rounded-2xl font-black shadow-[0_6px_0_#db2777] hover:brightness-110 active:translate-y-1 active:shadow-none transition-all text-xl flex items-center justify-center gap-2"><Snowflake size={20}/> 挑戰進階遊戲 (冰塊模式)</button>
