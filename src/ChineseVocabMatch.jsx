@@ -156,7 +156,6 @@ const speakText = (text, enabled) => {
   if (!enabled || !window.speechSynthesis) return;
   if (text === ITEM_BOMB || text === ITEM_CANDY) return;
   window.speechSynthesis.cancel();
-  // ✅ 使用發音對照表 (確保布丁念對)
   const spoken = PRONUNCIATION_MAP[text] || text;
   const utterance = new SpeechSynthesisUtterance(String(spoken));
   utterance.lang = 'zh-TW';
@@ -240,12 +239,10 @@ const FloatingDessertBackground = () => {
 // ----------------------------------------------------------------------
 
 export default function App() {
-  // ✅ 修正：從 URL 初始化 currentLesson
   const [currentLesson, setCurrentLesson] = useState(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const lessonId = searchParams.get('lesson');
-      // 確保 lessonId 存在且在 LESSON_DATA 中
       if (lessonId && LESSON_DATA[lessonId]) {
         return Number(lessonId);
       }
@@ -257,7 +254,11 @@ export default function App() {
   const [activeChars, setActiveChars] = useState([]); 
   const [colorMap, setColorMap] = useState({}); 
   const [selectedTile, setSelectedTile] = useState(null);
-  const [score, setScore] = useState(0);
+  
+  // ✅ 狀態調整：區分「當局分數」與「最高紀錄」
+  const [score, setScore] = useState(0); 
+  const [highScore, setHighScore] = useState(0);
+
   const [moves, setMoves] = useState(80); 
   const [gameState, setGameState] = useState('welcome'); 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -278,7 +279,6 @@ export default function App() {
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false); 
 
-  // ✅ 自訂題目相關狀態
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [customText, setCustomText] = useState("");
 
@@ -290,6 +290,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+  const [isFirebaseReady, setIsFirebaseReady] = useState(false);
 
   const [bombCount, setBombCount] = useState(0);
   const [candyCount, setCandyCount] = useState(0);
@@ -297,7 +298,6 @@ export default function App() {
 
   // --- Logic Helpers ---
 
-  // 監聽全螢幕變化
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -499,7 +499,6 @@ export default function App() {
     const pool = LESSON_DATA[lesson] || LESSON_DATA[1];
     const allCharsInLesson = Array.from(new Set(Array.from(pool).filter(c => c.trim() !== '')));
     
-    // ✅ 這裡使用新的配色表，但因為有 shuffleArray，顏色會隨機分配
     const shuffledColors = shuffleArray(DISTINCT_PALETTE);
     const newGlobalColorMap = {};
     allCharsInLesson.forEach((char, index) => {
@@ -507,7 +506,6 @@ export default function App() {
     });
     setColorMap(newGlobalColorMap);
 
-    // ✅ 修改這裡：針對 Lesson 0 (12生肖) 設定 chunkSize 為 4，這樣 12/4 = 3 關
     const chunkSize = (lesson === 0 || lesson === 13 || allCharsInLesson.length === 8) ? 4 : 5;
     
     const stages = [];
@@ -517,9 +515,11 @@ export default function App() {
     
     setGameStages(stages);
     setCurrentStageIndex(0);
-    // ⚠️ 移除 setScore(0) -> 讓分數可以持續累加，不論玩哪一關！
+    
+    // ✅ 每次開始新的遊戲/課程，當前分數歸零重新計算！
+    setScore(0);
     setCombo(0);
-    // 寶物不歸零
+    
     setIsProcessing(false);
     setSelectedTile(null);
     setHintTiles([]);
@@ -544,13 +544,11 @@ export default function App() {
       startNewLesson(999, false);
   };
 
-  // ✅ 新增：刪除自訂題目的功能
   const handleDeleteCustom = () => {
       if (LESSON_DATA[999]) {
           delete LESSON_DATA[999];
       }
       setCustomText("");
-      // 如果當前是在自訂關卡，強制跳回第0課
       if (Number(currentLesson) === 999) {
           setCurrentLesson(0);
           startNewLesson(0, false);
@@ -579,14 +577,12 @@ export default function App() {
         else if (matches.length >= 5) setMatchMessage("GREAT!");
         else setMatchMessage("Good!");
         setTimeout(() => setMatchMessage(""), 1200);
-        // ✅ 修正：傳入 audioEnabled
         playSound('match3', audioEnabled);
         const firstMatchChar = tempBoard[matches[0].r][matches[0].c].char;
         if (firstMatchChar !== ITEM_BOMB && firstMatchChar !== ITEM_CANDY) {
             speakText(firstMatchChar, audioEnabled);
         }
       } else {
-        // ✅ 修正：傳入 audioEnabled
         playSound('combo', audioEnabled);
         showGameMessage(`${currentCombo} COMBO!`, 1000);
       }
@@ -613,7 +609,6 @@ export default function App() {
         }
       });
       
-      // ✅ 修正：傳入 audioEnabled
       if (iceBroken) playSound('ice', audioEnabled);
 
       setBoard([...tempBoard]);
@@ -634,7 +629,13 @@ export default function App() {
         }
       });
       
-      setScore(prev => prev + (matches.length * 10 * currentCombo));
+      // ✅ 狀態更新：同時更新當局分數，並且若破紀錄，也更新最高紀錄
+      setScore(prev => {
+        const newScore = prev + (matches.length * 10 * currentCombo);
+        setHighScore(hs => Math.max(hs, newScore));
+        return newScore;
+      });
+
       setBoard([...tempBoard]);
       await new Promise(r => setTimeout(r, 100));
       
@@ -651,7 +652,6 @@ export default function App() {
             setLastTargetHit(t.char);
             setTimeout(() => setLastTargetHit(null), 600);
             if (t.count - foundCount <= 0 && t.count > 0) {
-                // ✅ 修正：傳入 audioEnabled
                 playSound('win', audioEnabled);
                 setShowConfetti(true);
                 setTimeout(() => setShowConfetti(false), 2500);
@@ -669,7 +669,6 @@ export default function App() {
     const clickedCell = board[r][c];
 
     if (clickedCell.char === ITEM_BOMB) {
-        // ✅ 修正：傳入 audioEnabled
         playSound('collect', audioEnabled);
         setBombCount(prev => prev + 1);
         const newBoard = JSON.parse(JSON.stringify(board));
@@ -685,7 +684,6 @@ export default function App() {
         return;
     }
     if (clickedCell.char === ITEM_CANDY) {
-        // ✅ 修正：傳入 audioEnabled
         playSound('collect', audioEnabled);
         setCandyCount(prev => prev + 1);
         const newBoard = JSON.parse(JSON.stringify(board));
@@ -703,7 +701,6 @@ export default function App() {
 
     if (activeTool === 'bomb') {
       setBombCount(prev => prev - 1); setActiveTool(null); setHoveredTile(null); 
-      // ✅ 修正：傳入 audioEnabled
       playSound('bomb', audioEnabled);
       let tempBoard = JSON.parse(JSON.stringify(board));
       const exploded = [];
@@ -746,7 +743,6 @@ export default function App() {
       if (target === ITEM_BOMB || target === ITEM_CANDY) return; 
 
       setCandyCount(prev => prev - 1); setActiveTool(null); 
-      // ✅ 修正：傳入 audioEnabled
       playSound('win', audioEnabled); 
       speakText(target, audioEnabled);
       let tempBoard = JSON.parse(JSON.stringify(board));
@@ -782,7 +778,6 @@ export default function App() {
 
     if (!selectedTile) { 
         setSelectedTile({ r, c }); 
-        // ✅ 修正：傳入 audioEnabled
         playSound('select', audioEnabled); 
         return; 
     }
@@ -810,7 +805,6 @@ export default function App() {
       }
     } else {
       setSelectedTile({ r, c }); 
-      // ✅ 修正：傳入 audioEnabled
       playSound('select', audioEnabled);
     }
   };
@@ -855,7 +849,7 @@ export default function App() {
     }
   };
 
-  // ✅ 修復登入邏輯：抓取舊有分數，避免覆蓋
+  // ✅ 修復：登入時抓取玩家過去的最高分數，避免覆蓋為0
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
     const finalName = inputName.trim();
@@ -864,21 +858,21 @@ export default function App() {
     localStorage.setItem('wordcrush_player_name', finalName);
     setPlayerName(finalName);
 
-    if (db && currentUser) {
+    if (isFirebaseReady && db && currentUser) {
       try {
         const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', currentUser.uid);
         const docSnap = await getDoc(docRef);
-        let currentScore = score;
+        let currentHighScore = highScore;
         
-        // 如果這個帳號之前有玩過，繼承他的最高分數
+        // 若該玩家以前有玩過，繼承他的歷史最高分
         if (docSnap.exists()) {
-          currentScore = Math.max(currentScore, docSnap.data().score || 0);
-          setScore(currentScore);
+          currentHighScore = Math.max(currentHighScore, docSnap.data().score || 0);
+          setHighScore(currentHighScore);
         }
         
         await setDoc(docRef, {
           name: finalName,
-          score: currentScore,
+          score: currentHighScore, // 將撈出來的高分寫回
           lesson: currentLesson,
           lastSeen: serverTimestamp(),
           uid: currentUser.uid 
@@ -902,7 +896,7 @@ export default function App() {
     startNewLesson(nextLesson, false); 
   };
 
-  // ✅ 正確的身分驗證流程
+  // ✅ 初始化 Auth
   useEffect(() => {
     if (!auth) return;
     const initAuth = async () => {
@@ -912,6 +906,7 @@ export default function App() {
         } else {
           await signInAnonymously(auth);
         }
+        setIsFirebaseReady(true);
       } catch (e) {
         console.error("Auth init failed:", e);
       }
@@ -924,23 +919,23 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // ✅ 讀取排行榜資料 (在前端進行排序，符合環境限制)
+  // ✅ 讀取排行榜資料
   useEffect(() => {
-    if (!currentUser || !db) return;
+    if (!isFirebaseReady || !db) return;
     const qL = collection(db, 'artifacts', appId, 'public', 'data', 'players');
     const unsubscribe = onSnapshot(qL, (s) => {
       let players = s.docs.map(d => ({ ...d.data(), id: d.id })).filter(u => Number(u.score) > 0);
-      players.sort((a, b) => Number(b.score) - Number(a.score)); // 本地排序
-      setLeaderboard(players.slice(0, 20)); // 取前 20 名
+      players.sort((a, b) => Number(b.score) - Number(a.score)); // 前端排序
+      setLeaderboard(players.slice(0, 20)); // 只顯示前 20 名
     }, (error) => {
       console.error("讀取排行榜失敗:", error);
     });
     return () => unsubscribe();
-  }, [currentUser]);
+  }, [isFirebaseReady]);
 
   // ✅ 自動心跳：更新最後上線時間
   useEffect(() => {
-    if (!currentUser || !playerName || !db) return; 
+    if (!isFirebaseReady || !currentUser || !playerName || !db) return; 
     const heartbeat = setInterval(async () => {
       try {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', currentUser.uid), {
@@ -952,16 +947,16 @@ export default function App() {
       }
     }, 60000); 
     return () => clearInterval(heartbeat);
-  }, [currentUser, playerName]);
+  }, [isFirebaseReady, currentUser, playerName]);
 
-  // ✅ 自動同步分數 (避免分數變成 0 時覆蓋)
+  // ✅ 自動同步分數：寫入的是 HighScore (最高紀錄)，不是 current score
   useEffect(() => {
-    if (db && currentUser && score > 0 && playerName) {
+    if (isFirebaseReady && db && currentUser && highScore > 0 && playerName) {
       const saveToFirebase = async () => {
         try {
           await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', currentUser.uid), {
             name: playerName,
-            score: score, // 持續累加，更新到資料庫
+            score: highScore, // 只把最高紀錄寫入排行榜！
             lesson: currentLesson,
             lastSeen: serverTimestamp(),
             uid: currentUser.uid
@@ -972,7 +967,7 @@ export default function App() {
       };
       saveToFirebase();
     }
-  }, [score, currentLesson, currentUser, playerName]);
+  }, [highScore, currentLesson, currentUser, isFirebaseReady, playerName]);
 
   useEffect(() => {
     if (gameState === 'playing' && levelTargets.length > 0) {
@@ -1017,7 +1012,6 @@ export default function App() {
             <Smartphone size={16}/> 📱 安裝 / 加入書籤
           </button>
           
-          {/* 新增：遊戲說明按鈕 */}
           <button 
             onClick={() => setShowHelpModal(true)}
             className="mt-3 text-pink-400 font-bold text-sm hover:underline flex items-center justify-center gap-1 w-full"
@@ -1044,7 +1038,7 @@ export default function App() {
             </div>
         )}
 
-        {/* 新增：遊戲說明彈窗 */}
+        {/* 遊戲說明彈窗 */}
         {showHelpModal && (
             <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowHelpModal(false)}>
                 <div className="bg-white p-6 rounded-[30px] shadow-2xl w-full max-w-sm relative" onClick={e => e.stopPropagation()}>
@@ -1140,31 +1134,38 @@ export default function App() {
           
           <div className="flex justify-between items-center w-full px-2 text-black">
             <div className="flex items-center gap-3">
-              <select value={currentLesson} onChange={(e) => { const n = Number(e.target.value); setCurrentLesson(n); startNewLesson(n, false); }}
+              <select value={currentLesson} onChange={(e) => { 
+                  const val = e.target.value;
+                  if (val === 'custom') {
+                      setShowCustomModal(true);
+                  } else {
+                      const n = Number(val); 
+                      setCurrentLesson(n); 
+                      startNewLesson(n, false); 
+                  }
+              }}
                       className="bg-gray-100 border-2 border-gray-100 rounded-2xl px-4 py-2 font-black text-pink-600 text-sm outline-none">
-                {Object.keys(LESSON_DATA).map(k => <option key={k} value={k}>{Number(k) === 0 ? "🐲 生肖關" : (Number(k) === 13 ? "🍰 甜點關" : (Number(k) === 999 ? "✏️ 自訂題目" : `第 ${k} 課`))}</option>)}
+                {Object.keys(LESSON_DATA).map(k => <option key={k} value={k}>{Number(k) === 0 ? "🐲 生肖關" : (Number(k) === 13 ? "🍰 甜點關" : (Number(k) === 999 ? "✏️ 目前自訂" : `第 ${k} 課`))}</option>)}
+                <option value="custom">➕ 新增 / 修改自訂...</option>
               </select>
               <div className="flex items-center gap-1">
-                <button 
-                  onClick={() => setShowCustomModal(true)}
-                  className="p-2 bg-pink-100 text-pink-600 rounded-xl hover:bg-pink-200 transition-colors"
-                >
-                  <PenTool size={16} />
-                </button>
                 <div className="flex items-center gap-1 text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
                   {isAdvancedMode && <span className="text-blue-500 flex items-center gap-1"><Snowflake size={12}/>進階</span>}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={handleShare} className="p-2 bg-blue-100 text-blue-500 rounded-xl hover:bg-blue-200 transition-all active:scale-90 shadow-sm"><Share2 size={18} /></button>
+              <button onClick={() => setGameState('welcome')} className="p-2 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-all active:scale-90 shadow-sm" title="回首頁 / 離開遊戲">
+                <Home size={18} />
+              </button>
+              <button onClick={handleShare} className="p-2 bg-blue-100 text-blue-500 rounded-xl hover:bg-blue-200 transition-all active:scale-90 shadow-sm" title="分享"><Share2 size={18} /></button>
               <button onClick={() => setAudioEnabled(!audioEnabled)} className={`p-2 rounded-xl transition-all active:scale-90 shadow-sm ${audioEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
                 {audioEnabled ? <Volume2 size={18}/> : <VolumeX size={18}/>}
               </button>
-              <button onClick={toggleFullscreen} className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all active:scale-90 shadow-sm">
+              <button onClick={toggleFullscreen} className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all active:scale-90 shadow-sm" title="全螢幕">
                 {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
               </button>
-              <button onClick={() => setShowLeaderboardModal(true)} className="p-2 bg-yellow-100 text-yellow-700 rounded-xl hover:bg-yellow-200 transition-all active:scale-90 shadow-sm">
+              <button onClick={() => setShowLeaderboardModal(true)} className="p-2 bg-yellow-100 text-yellow-700 rounded-xl hover:bg-yellow-200 transition-all active:scale-90 shadow-sm" title="排行榜">
                 <Trophy size={18} />
               </button>
             </div>
