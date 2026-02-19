@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { 
   Sparkles, RefreshCw, Trophy, BookOpen, Lightbulb, Share2, 
   Volume2, VolumeX, Bomb, Candy, Target, ArrowRight, X, Star, Plus, Snowflake, Home, Repeat,
-  Cake, Smartphone, Download
+  Cake, Smartphone, Download, PenTool, HelpCircle, MousePointer2
 } from 'lucide-react';
 
 // Firebase Imports
@@ -22,7 +22,8 @@ const GRID_SIZE = 8;
 const ITEM_BOMB = '$$BOMB$$';
 const ITEM_CANDY = '$$CANDY$$';
 
-const LESSON_DATA = {
+// 預設課程資料
+let LESSON_DATA = {
   1: "新同學自己年跟比",
   2: "外公以前工作班後",
   3: "去近買東西魚還可",
@@ -46,7 +47,7 @@ const ZODIAC_MAP = {
 
 const DESSERT_ICONS = ['🧁', '🍩', '🍰', '🍪', '🍮'];
 
-// 🎨 飽滿鮮豔的馬卡龍配色 (Original Saturated Palette) 🎨
+// 🎨 飽滿鮮豔的馬卡龍配色
 const DISTINCT_PALETTE = [
   { bg: "#FFCDD2", border: "#E53935", text: "#B71C1C" }, // 紅
   { bg: "#FFE0B2", border: "#FB8C00", text: "#E65100" }, // 橙
@@ -62,6 +63,7 @@ const DISTINCT_PALETTE = [
   { bg: "#B2DFDB", border: "#00897B", text: "#004D40" }, // 藍綠
 ];
 
+// ✅ 請使用您自己的 Firebase Config ✅
 const firebaseConfig = {
   apiKey: "AIzaSyADRB5Mi8snvwJZL_kG8nYK9-I48obb-qE",
   authDomain: "wordcrush-e5535.firebaseapp.com",
@@ -251,7 +253,12 @@ export default function App() {
   const [levelTargets, setLevelTargets] = useState([]); 
   const messageTimeoutRef = useRef(null);
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
-  const [showInstallModal, setShowInstallModal] = useState(false); // ✅ 新增：安裝說明彈窗
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false); 
+
+  // ✅ 自訂題目相關狀態 ✅
+  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [customText, setCustomText] = useState("");
 
   const [playerName, setPlayerName] = useState(() => {
     return typeof window !== 'undefined' ? (localStorage.getItem('wordcrush_player_name') || "") : "";
@@ -388,6 +395,45 @@ export default function App() {
       }, duration);
   };
 
+  const handleShare = () => {
+    const url = new URL(window.location.href);
+    if (currentLesson !== 999) url.searchParams.set('lesson', currentLesson.toString());
+    const textToCopy = url.toString();
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => showGameMessage(`連結已複製!`))
+        .catch(() => fallbackCopyTextToClipboard(textToCopy));
+    } else {
+      fallbackCopyTextToClipboard(textToCopy);
+    }
+  };
+
+  const fallbackCopyTextToClipboard = (text) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed"; 
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        showGameMessage(`連結已複製!`);
+      } else {
+        showGameMessage(`複製失敗`);
+      }
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+      showGameMessage(`複製失敗`);
+    }
+
+    document.body.removeChild(textArea);
+  };
+
   const setupStage = useCallback((lessonIndex, stageIndex, stages, isAdvanced) => {
     const currentStageChars = stages[stageIndex];
     if (!currentStageChars) return;
@@ -426,7 +472,6 @@ export default function App() {
     setCurrentStageIndex(0);
     setScore(0);
     setCombo(0);
-    // 寶物不歸零
     setIsProcessing(false);
     setSelectedTile(null);
     setHintTiles([]);
@@ -434,6 +479,22 @@ export default function App() {
     setIsAdvancedMode(isAdvanced);
     setupStage(lesson, 0, stages, isAdvanced);
   }, [setupStage]);
+
+  const handleCustomStart = () => {
+      if (!customText.trim()) return;
+      const cleanText = customText.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+      const uniqueChars = Array.from(new Set(cleanText));
+      
+      if (uniqueChars.length < 6) {
+          alert('請至少輸入 6 個不同的文字喔！');
+          return;
+      }
+      
+      LESSON_DATA[999] = uniqueChars.join('');
+      setCurrentLesson(999);
+      setShowCustomModal(false);
+      startNewLesson(999, false);
+  };
 
   const processBoard = async (startBoard) => {
     setIsProcessing(true);
@@ -754,6 +815,25 @@ export default function App() {
     return onSnapshot(qL, s => setLeaderboard(s.docs.map(d => ({ ...d.data(), id: d.id })).filter(u => Number(u.score) > 0)));
   }, [isFirebaseReady]);
 
+  // 自動同步分數
+  useEffect(() => {
+    if (isFirebaseReady && currentUser && score >= 0) {
+      const saveToFirebase = async () => {
+        try {
+          await setDoc(doc(db, "players", currentUser.uid), {
+            name: playerName || '無名氏',
+            score: score,
+            lesson: currentLesson,
+            lastSeen: serverTimestamp()
+          }, { merge: true });
+        } catch (e) {
+          console.error("Auto save failed:", e);
+        }
+      };
+      saveToFirebase();
+    }
+  }, [score, currentLesson, currentUser, isFirebaseReady, playerName]);
+
   useEffect(() => {
     if (gameState === 'playing' && levelTargets.length > 0) {
         if (levelTargets.every(t => Number(t.count) === 0)) {
@@ -787,6 +867,14 @@ export default function App() {
           >
             <Smartphone size={16}/> 📱 安裝 / 加入書籤
           </button>
+          
+          {/* ✅ 新增：遊戲說明按鈕 ✅ */}
+          <button 
+            onClick={() => setShowHelpModal(true)}
+            className="mt-3 text-pink-400 font-bold text-sm hover:underline flex items-center justify-center gap-1 w-full"
+          >
+             <HelpCircle size={16} /> 遊戲說明
+          </button>
         </div>
         
         {/* 安裝教學彈窗 */}
@@ -806,6 +894,47 @@ export default function App() {
                 </div>
             </div>
         )}
+
+        {/* ✅ 新增：遊戲說明彈窗 ✅ */}
+        {showHelpModal && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowHelpModal(false)}>
+                <div className="bg-white p-6 rounded-[30px] shadow-2xl w-full max-w-sm relative" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => setShowHelpModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={24} /></button>
+                    <h3 className="text-2xl font-black text-pink-500 mb-6 text-center">🎮 怎麼玩？</h3>
+                    
+                    <div className="space-y-6">
+                        <div className="flex items-start gap-4">
+                            <div className="bg-pink-100 p-3 rounded-2xl text-pink-500"><MousePointer2 size={24} /></div>
+                            <div>
+                                <h4 className="font-bold text-lg text-gray-800">1. 交換方塊</h4>
+                                <p className="text-gray-500 text-sm">手指滑動或點擊，讓 3 個一樣的字連成一線就能消除！</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-4">
+                            <div className="bg-yellow-100 p-3 rounded-2xl text-yellow-600"><Target size={24} /></div>
+                            <div>
+                                <h4 className="font-bold text-lg text-gray-800">2. 收集目標</h4>
+                                <p className="text-gray-500 text-sm">注意看最上面的目標，把它們的數量都變成 0 就過關囉！</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-4">
+                            <div className="bg-blue-100 p-3 rounded-2xl text-blue-500"><Bomb size={24} /></div>
+                            <div>
+                                <h4 className="font-bold text-lg text-gray-800">3. 寶物獎勵</h4>
+                                <p className="text-gray-500 text-sm">一次消掉 4 個或 5 個字，會掉落炸彈或糖果，點擊收集它們！</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onClick={() => setShowHelpModal(false)} className="w-full bg-gradient-to-r from-pink-400 to-pink-500 text-white font-bold py-3 rounded-2xl mt-8 shadow-lg active:scale-95 transition-all">
+                        開始挑戰！
+                    </button>
+                </div>
+            </div>
+        )}
+
         <div className="mt-8 text-center text-pink-300 font-bold text-sm tracking-widest uppercase relative z-10">Design by Sophia Wong</div>
       </div>
     );
@@ -854,24 +983,40 @@ export default function App() {
                 })}
               </div>
             </div>
-            <button onClick={() => setShowLeaderboardModal(true)} className="p-2 bg-yellow-100 text-yellow-700 rounded-xl hover:bg-yellow-200 transition-all active:scale-90 shadow-sm">
-                <Trophy size={18} />
-            </button>
+            {/* 🏆 獎盃按鈕從這裡移除了 */}
           </div>
           
           <div className="flex justify-between items-center w-full px-2 text-black">
             <div className="flex items-center gap-3">
               <select value={currentLesson} onChange={(e) => { const n = Number(e.target.value); setCurrentLesson(n); startNewLesson(n, false); }}
                       className="bg-gray-100 border-2 border-gray-100 rounded-2xl px-4 py-2 font-black text-pink-600 text-sm outline-none">
-                {Object.keys(LESSON_DATA).map(k => <option key={k} value={k}>{Number(k) === 13 ? "🐯 12生肖" : `第 ${k} 課`}</option>)}
+                {Object.keys(LESSON_DATA).map(k => <option key={k} value={k}>{Number(k) === 13 ? "🐯 12生肖" : (Number(k) === 999 ? "✏️ 自訂題目" : `第 ${k} 課`)}</option>)}
               </select>
-              <div className="flex items-center gap-1 text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
-                {isAdvancedMode && <span className="text-blue-500 flex items-center gap-1"><Snowflake size={12}/>進階</span>}
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => setShowCustomModal(true)}
+                  className="p-2 bg-pink-100 text-pink-600 rounded-xl hover:bg-pink-200 transition-colors"
+                >
+                  <PenTool size={16} />
+                </button>
+                <div className="flex items-center gap-1 text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
+                  {isAdvancedMode && <span className="text-blue-500 flex items-center gap-1"><Snowflake size={12}/>進階</span>}
+                </div>
               </div>
             </div>
-            <div className="flex gap-6 text-center text-black">
-              <div><div className="text-[10px] text-pink-300 font-black uppercase">Moves</div><div className={`text-2xl font-black text-black ${Number(moves) < 10 ? 'text-red-500 animate-pulse' : ''}`}>{Number(moves)}</div></div>
-              <div><div className="text-[10px] text-pink-300 font-black uppercase">Score</div><div className="text-2xl font-black text-pink-500">{Number(score)}</div></div>
+            {/* ✅ 分享、靜音、獎盃(新位置)、分數 ✅ */}
+            <div className="flex items-center gap-2">
+              <button onClick={handleShare} className="p-2 bg-blue-100 text-blue-500 rounded-xl hover:bg-blue-200 transition-all active:scale-90 shadow-sm"><Share2 size={18} /></button>
+              <button onClick={() => setAudioEnabled(!audioEnabled)} className={`p-2 rounded-xl transition-all active:scale-90 shadow-sm ${audioEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                {audioEnabled ? <Volume2 size={18}/> : <VolumeX size={18}/>}
+              </button>
+              <button onClick={() => setShowLeaderboardModal(true)} className="p-2 bg-yellow-100 text-yellow-700 rounded-xl hover:bg-yellow-200 transition-all active:scale-90 shadow-sm">
+                <Trophy size={18} />
+              </button>
+              <div className="ml-2 text-center">
+                <div className="text-[10px] text-pink-300 font-black uppercase leading-none">Score</div>
+                <div className="text-lg font-black text-pink-500 leading-none">{Number(score)}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -992,7 +1137,7 @@ export default function App() {
                 <h2 className="text-3xl font-black text-pink-600 mb-2">
                   {gameState === 'won' ? '甜點大師！' : gameState === 'stage_cleared' ? '恭喜晉級！' : '下次再來！'}
                 </h2>
-                <p className="text-gray-500 mb-8 font-bold">
+                <p className="text-gray-500 mb-8 font-bold text-lg">
                     {gameState === 'won' 
                         ? `${playerName || '你'} 已經認識${Number(currentLesson) === 13 ? " 12生肖 所有動物" : `第 ${currentLesson} 課所有生字`}了！` 
                         : gameState === 'stage_cleared' 
@@ -1008,8 +1153,11 @@ export default function App() {
                   {gameState === 'won' && (
                       <>
                         <button onClick={() => startNewLesson(currentLesson, false)} className="col-span-1 bg-gray-100 text-gray-600 py-3 rounded-2xl font-black hover:bg-gray-200">再玩一次</button>
-                        <button onClick={goToNextLevel} className="col-span-1 bg-gradient-to-r from-blue-400 to-blue-500 text-white py-3 rounded-2xl font-black shadow-lg hover:brightness-110 active:translate-y-1">挑戰下一課</button>
+                        <button onClick={goToNextLevel} className="col-span-1 bg-blue-500 text-white py-3 rounded-2xl font-black shadow-lg hover:brightness-110 active:translate-y-1">挑戰下一課</button>
+                        
+                        {/* ✅ 進階遊戲最顯眼 (Row 2, 全寬) ✅ */}
                         <button onClick={() => startNewLesson(currentLesson, true)} className="col-span-2 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-4 rounded-2xl font-black shadow-[0_6px_0_#db2777] hover:brightness-110 active:translate-y-1 active:shadow-none transition-all text-xl flex items-center justify-center gap-2"><Snowflake size={20}/> 挑戰進階遊戲 (冰塊模式)</button>
+                        
                         <button onClick={() => setGameState('welcome')} className="col-span-2 bg-white border-2 border-gray-100 text-gray-400 py-3 rounded-2xl font-bold hover:text-gray-600 flex items-center justify-center gap-2"><Home size={18}/> 結束遊戲</button>
                       </>
                   )}
@@ -1045,8 +1193,31 @@ export default function App() {
               <span className="text-xs font-black mt-1 text-black">重置</span>
           </button>
         </div>
+        
+        {/* ✅ 自訂題目彈窗 ✅ */}
+        {showCustomModal && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowCustomModal(false)}>
+                <div className="bg-white p-6 rounded-[30px] shadow-2xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                    <h3 className="text-xl font-bold text-pink-600 mb-2 flex items-center gap-2"><PenTool/> 自訂題目</h3>
+                    <p className="text-sm text-gray-500 mb-4">請輸入您想要練習的文字 (至少6個不同的字)</p>
+                    <textarea 
+                        className="w-full h-32 border-2 border-pink-100 rounded-xl p-3 focus:outline-none focus:border-pink-300 text-lg text-black"
+                        placeholder="在此貼上文章或輸入生字..."
+                        value={customText}
+                        onChange={(e) => setCustomText(e.target.value)}
+                    />
+                    <div className="flex gap-2 mt-4">
+                        <button onClick={() => setShowCustomModal(false)} className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-600 font-bold">取消</button>
+                        <button onClick={handleCustomStart} className="flex-1 py-3 rounded-xl bg-pink-500 text-white font-bold shadow-lg hover:bg-pink-600">開始遊戲</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
         <div className="text-center text-gray-400 text-xs pb-2 text-black">Design by Sophia Wong</div>
       </div>
+      
+      {/* ... 排行榜程式碼維持不變 ... */}
 
       {/* 排行榜 */}
       {showLeaderboardModal && (
