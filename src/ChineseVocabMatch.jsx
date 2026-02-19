@@ -46,7 +46,7 @@ const ZODIAC_MAP = {
 
 const DESSERT_ICONS = ['🧁', '🍩', '🍰', '🍪', '🍮'];
 
-// 🎨 飽滿鮮豔的馬卡龍配色 (文字顏色為深色對比)
+// 🎨 飽滿鮮豔的馬卡龍配色 (Original Saturated Palette) 🎨
 const DISTINCT_PALETTE = [
   { bg: "#FFCDD2", border: "#E53935", text: "#B71C1C" }, // 紅
   { bg: "#FFE0B2", border: "#FB8C00", text: "#E65100" }, // 橙
@@ -62,7 +62,6 @@ const DISTINCT_PALETTE = [
   { bg: "#B2DFDB", border: "#00897B", text: "#004D40" }, // 藍綠
 ];
 
-// ✅ 這是您提供的 Firebase 設定
 const firebaseConfig = {
   apiKey: "AIzaSyADRB5Mi8snvwJZL_kG8nYK9-I48obb-qE",
   authDomain: "wordcrush-e5535.firebaseapp.com",
@@ -252,7 +251,7 @@ export default function App() {
   const [levelTargets, setLevelTargets] = useState([]); 
   const messageTimeoutRef = useRef(null);
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
-  const [showInstallModal, setShowInstallModal] = useState(false); // 新增：安裝說明彈窗
+  const [showInstallModal, setShowInstallModal] = useState(false); // ✅ 新增：安裝說明彈窗
 
   const [playerName, setPlayerName] = useState(() => {
     return typeof window !== 'undefined' ? (localStorage.getItem('wordcrush_player_name') || "") : "";
