@@ -47,7 +47,7 @@ const ZODIAC_MAP = {
 
 const DESSERT_ICONS = ['🧁', '🍩', '🍰', '🍪', '🍮'];
 
-// 🎨 飽滿鮮豔的馬卡龍配色
+// 🎨 飽滿鮮豔的馬卡龍配色 (Original Saturated Palette) 🎨
 const DISTINCT_PALETTE = [
   { bg: "#FFCDD2", border: "#E53935", text: "#B71C1C" }, // 紅
   { bg: "#FFE0B2", border: "#FB8C00", text: "#E65100" }, // 橙
@@ -189,7 +189,7 @@ const ConfettiEffect = () => {
   );
 };
 
-// --- 優化：漂浮甜點背景 (z-index: -1) ---
+// --- 優化：漂浮甜點背景 (z-index: 0) ---
 const FloatingDessertBackground = () => {
     const items = useMemo(() => {
         return Array.from({ length: 15 }).map((_, i) => ({
@@ -204,8 +204,7 @@ const FloatingDessertBackground = () => {
     }, []);
 
     return (
-        // ✅ 修正：使用 z-[-1] 確保在最底層 ✅
-        <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden select-none">
+        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
             {items.map((item) => (
                 <div 
                     key={item.id}
@@ -257,6 +256,7 @@ export default function App() {
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false); 
 
+  // ✅ 自訂題目相關狀態 ✅
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [customText, setCustomText] = useState("");
 
@@ -781,8 +781,13 @@ export default function App() {
     localStorage.setItem('wordcrush_player_name', playerName.trim());
     if (db && auth.currentUser) {
       try {
-        await setDoc(doc(db, "players", auth.currentUser.uid), {
-          name: playerName, score: 0, lesson: currentLesson, lastSeen: serverTimestamp()
+        // ✅ 修正：使用 playerName 當作 document ID ✅
+        await setDoc(doc(db, "players", playerName.trim()), {
+          name: playerName.trim(),
+          score: 0,
+          lesson: currentLesson,
+          lastSeen: serverTimestamp(),
+          uid: auth.currentUser.uid 
         }, { merge: true });
       } catch (err) { console.error(err); }
     }
@@ -798,7 +803,8 @@ export default function App() {
   };
 
   const goToNextLevel = () => {
-    const nextLesson = currentLesson < 13 ? currentLesson + 1 : 1;
+    // 邏輯：0(生肖) -> 1 -> 2 ... -> 12 -> 0 循環
+    const nextLesson = currentLesson < 12 ? currentLesson + 1 : 0;
     setCurrentLesson(nextLesson);
     startNewLesson(nextLesson, false); 
   };
@@ -816,16 +822,33 @@ export default function App() {
     return onSnapshot(qL, s => setLeaderboard(s.docs.map(d => ({ ...d.data(), id: d.id })).filter(u => Number(u.score) > 0)));
   }, [isFirebaseReady]);
 
-  // 自動同步分數
+  // ✅ 自動心跳：使用 playerName 更新時間 ✅
   useEffect(() => {
-    if (isFirebaseReady && currentUser && score >= 0) {
+    if (!currentUser || !playerName) return; 
+    const heartbeat = setInterval(async () => {
+      try {
+        await setDoc(doc(db, "players", playerName), {
+          lastSeen: serverTimestamp(),
+          uid: currentUser.uid // 同時更新 UID
+        }, { merge: true });
+      } catch (e) {
+        console.error("Heartbeat failed", e);
+      }
+    }, 60000); 
+    return () => clearInterval(heartbeat);
+  }, [currentUser, playerName]);
+
+  // 自動同步分數 (使用 playerName)
+  useEffect(() => {
+    if (isFirebaseReady && currentUser && score >= 0 && playerName) {
       const saveToFirebase = async () => {
         try {
-          await setDoc(doc(db, "players", currentUser.uid), {
-            name: playerName || '無名氏',
+          await setDoc(doc(db, "players", playerName), {
+            name: playerName,
             score: score,
             lesson: currentLesson,
-            lastSeen: serverTimestamp()
+            lastSeen: serverTimestamp(),
+            uid: currentUser.uid
           }, { merge: true });
         } catch (e) {
           console.error("Auto save failed:", e);
@@ -849,6 +872,9 @@ export default function App() {
   if (gameState === 'welcome') {
     return (
       <div className="min-h-screen bg-pink-50 flex flex-col items-center justify-center p-4 font-sans text-black text-center relative overflow-hidden">
+        {/* 背景甜點漂浮動畫 */}
+        <FloatingDessertBackground />
+
         <div className="bg-white p-8 rounded-[40px] border-4 border-pink-200 text-black relative z-10">
           <div className="bg-gradient-to-tr from-pink-400 to-yellow-300 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-sm">
             <Cake size={48} />
@@ -869,7 +895,7 @@ export default function App() {
             <Smartphone size={16}/> 📱 安裝 / 加入書籤
           </button>
           
-          {/* ✅ 新增：遊戲說明按鈕 ✅ */}
+          {/* 新增：遊戲說明按鈕 */}
           <button 
             onClick={() => setShowHelpModal(true)}
             className="mt-3 text-pink-400 font-bold text-sm hover:underline flex items-center justify-center gap-1 w-full"
@@ -896,7 +922,7 @@ export default function App() {
             </div>
         )}
 
-        {/* ✅ 新增：遊戲說明彈窗 ✅ */}
+        {/* 新增：遊戲說明彈窗 */}
         {showHelpModal && (
             <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowHelpModal(false)}>
                 <div className="bg-white p-6 rounded-[30px] shadow-2xl w-full max-w-sm relative" onClick={e => e.stopPropagation()}>
@@ -944,7 +970,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-pink-50 flex font-sans select-none overflow-hidden justify-center text-black">
       <div className="w-full max-w-[600px] flex flex-col items-center h-screen relative pt-4 md:pt-6 px-4">
-        {/* ✅ 背景甜點漂浮動畫 ✅ */}
+        {/* 背景甜點漂浮動畫 */}
         <FloatingDessertBackground />
         
         {showConfetti && <ConfettiEffect />}
@@ -984,7 +1010,7 @@ export default function App() {
                 })}
               </div>
             </div>
-            {/* 🏆 獎盃按鈕從這裡移除了 */}
+            {/* 🏆 右上角獎盃已移除 */}
           </div>
           
           <div className="flex justify-between items-center w-full px-2 text-black">
@@ -1240,8 +1266,19 @@ export default function App() {
                 <div key={user.id} className={`flex items-center justify-between p-5 rounded-[30px] transition-all ${user.id === (currentUser?.uid || '') ? 'bg-pink-100' : 'bg-gray-50'}`}>
                   <div className="flex flex-col text-black">
                     <div className="flex items-center gap-4 text-black">
+                      {/* ✅ 新增：在線狀態指示燈 (🟢) ✅ */}
                       <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black ${idx === 0 ? 'bg-yellow-400 text-white' : 'bg-white text-gray-400'}`}>{idx + 1}</span>
-                      <span className="font-bold text-gray-700 text-black">{String(user.name)}</span>
+                      <div className="flex flex-col">
+                          <span className="font-bold text-gray-700 text-black flex items-center gap-2">
+                              {String(user.name)}
+                              {/* 這裡的判斷邏輯非常關鍵 */}
+                              {((currentUser && user.id === currentUser.uid) || (user.lastSeen && typeof user.lastSeen.toMillis === 'function' && (Date.now() - user.lastSeen.toMillis()) < 5 * 60 * 1000)) && (
+                                  <span className="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> 在線
+                                  </span>
+                              )}
+                          </span>
+                      </div>
                     </div>
                   </div>
                   <span className="font-black text-pink-500 text-xl text-black">{Number(user.score)}</span>
