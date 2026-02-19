@@ -1039,8 +1039,8 @@ export default function App() {
 
         {/* Header */}
         <div className="w-full bg-white p-4 mb-4 flex flex-col gap-4 rounded-[32px] border-2 border-white shadow-sm text-black z-10 relative">
-          <div className="flex justify-between items-center w-full px-2 text-black">
-            <div className="flex gap-3 items-center bg-gray-50 px-4 py-2 rounded-[24px] flex-1 mr-2 relative overflow-hidden">
+          <div className="flex justify-between items-center w-full px-2 text-black gap-2">
+            <div className="flex gap-3 items-center bg-gray-50 px-4 py-2 rounded-[24px] flex-1 relative overflow-hidden">
               <span className="text-[10px] font-bold text-gray-400 uppercase flex flex-col items-center leading-none shrink-0">
                 <Target size={14} className="mb-0.5 text-pink-400"/>目標
               </span>
@@ -1072,7 +1072,11 @@ export default function App() {
                 })}
               </div>
             </div>
-            {/* 🏆 右上角獎盃已移除 */}
+            {/* ✅ SCORE 移到這裡 */}
+            <div className="flex flex-col items-center justify-center bg-pink-50 px-4 py-2 rounded-[24px] shrink-0 min-w-[80px] h-[60px]">
+                <div className="text-[10px] text-pink-400 font-black uppercase leading-none mb-1">Score</div>
+                <div className="text-xl font-black text-pink-600 leading-none">{Number(score)}</div>
+            </div>
           </div>
           
           <div className="flex justify-between items-center w-full px-2 text-black">
@@ -1093,7 +1097,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-            {/* ✅ 分享、靜音、全螢幕、獎盃(新位置)、分數 ✅ */}
+            {/* ✅ 分享、靜音、全螢幕、獎盃 (分數已移除) ✅ */}
             <div className="flex items-center gap-2">
               <button onClick={handleShare} className="p-2 bg-blue-100 text-blue-500 rounded-xl hover:bg-blue-200 transition-all active:scale-90 shadow-sm"><Share2 size={18} /></button>
               <button onClick={() => setAudioEnabled(!audioEnabled)} className={`p-2 rounded-xl transition-all active:scale-90 shadow-sm ${audioEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
@@ -1106,10 +1110,6 @@ export default function App() {
               <button onClick={() => setShowLeaderboardModal(true)} className="p-2 bg-yellow-100 text-yellow-700 rounded-xl hover:bg-yellow-200 transition-all active:scale-90 shadow-sm">
                 <Trophy size={18} />
               </button>
-              <div className="ml-2 text-center">
-                <div className="text-[10px] text-pink-300 font-black uppercase leading-none">Score</div>
-                <div className="text-lg font-black text-pink-500 leading-none">{Number(score)}</div>
-              </div>
             </div>
           </div>
         </div>
