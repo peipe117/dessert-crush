@@ -156,6 +156,7 @@ const speakText = (text, enabled) => {
   if (!enabled || !window.speechSynthesis) return;
   if (text === ITEM_BOMB || text === ITEM_CANDY) return;
   window.speechSynthesis.cancel();
+  // ✅ 使用發音對照表 (確保布丁念對)
   const spoken = PRONUNCIATION_MAP[text] || text;
   const utterance = new SpeechSynthesisUtterance(String(spoken));
   utterance.lang = 'zh-TW';
@@ -499,6 +500,7 @@ export default function App() {
     const pool = LESSON_DATA[lesson] || LESSON_DATA[1];
     const allCharsInLesson = Array.from(new Set(Array.from(pool).filter(c => c.trim() !== '')));
     
+    // ✅ 這裡使用新的配色表，但因為有 shuffleArray，顏色會隨機分配
     const shuffledColors = shuffleArray(DISTINCT_PALETTE);
     const newGlobalColorMap = {};
     allCharsInLesson.forEach((char, index) => {
@@ -506,6 +508,7 @@ export default function App() {
     });
     setColorMap(newGlobalColorMap);
 
+    // ✅ 修改這裡：針對 Lesson 0 (12生肖) 設定 chunkSize 為 4，這樣 12/4 = 3 關
     const chunkSize = (lesson === 0 || lesson === 13 || allCharsInLesson.length === 8) ? 4 : 5;
     
     const stages = [];
@@ -849,7 +852,6 @@ export default function App() {
     }
   };
 
-  // ✅ 修復：登入時抓取玩家過去的最高分數，避免覆蓋為0
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
     const finalName = inputName.trim();
@@ -864,7 +866,6 @@ export default function App() {
         const docSnap = await getDoc(docRef);
         let currentHighScore = highScore;
         
-        // 若該玩家以前有玩過，繼承他的歷史最高分
         if (docSnap.exists()) {
           currentHighScore = Math.max(currentHighScore, docSnap.data().score || 0);
           setHighScore(currentHighScore);
@@ -872,7 +873,7 @@ export default function App() {
         
         await setDoc(docRef, {
           name: finalName,
-          score: currentHighScore, // 將撈出來的高分寫回
+          score: currentHighScore,
           lesson: currentLesson,
           lastSeen: serverTimestamp(),
           uid: currentUser.uid 
@@ -956,7 +957,7 @@ export default function App() {
         try {
           await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', currentUser.uid), {
             name: playerName,
-            score: highScore, // 只把最高紀錄寫入排行榜！
+            score: highScore, 
             lesson: currentLesson,
             lastSeen: serverTimestamp(),
             uid: currentUser.uid
@@ -1132,8 +1133,9 @@ export default function App() {
             </div>
           </div>
           
+          {/* ✅ 優化工具列間距與選單文字 */}
           <div className="flex justify-between items-center w-full px-2 text-black">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
               <select value={currentLesson} onChange={(e) => { 
                   const val = e.target.value;
                   if (val === 'custom') {
@@ -1144,29 +1146,25 @@ export default function App() {
                       startNewLesson(n, false); 
                   }
               }}
-                      className="bg-gray-100 border-2 border-gray-100 rounded-2xl px-4 py-2 font-black text-pink-600 text-sm outline-none">
-                {Object.keys(LESSON_DATA).map(k => <option key={k} value={k}>{Number(k) === 0 ? "🐲 生肖關" : (Number(k) === 13 ? "🍰 甜點關" : (Number(k) === 999 ? "✏️ 目前自訂" : `第 ${k} 課`))}</option>)}
-                <option value="custom">➕ 新增 / 修改自訂...</option>
+                      className="bg-gray-100 border-2 border-gray-100 rounded-2xl px-2 py-1.5 font-black text-pink-600 text-sm outline-none w-28 text-center truncate">
+                {Object.keys(LESSON_DATA).map(k => <option key={k} value={k}>{Number(k) === 0 ? "🐲生肖關" : (Number(k) === 13 ? "🍰甜點關" : (Number(k) === 999 ? "✏️自訂" : `第${k}課`))}</option>)}
+                <option value="custom">➕自訂題目</option>
               </select>
-              <div className="flex items-center gap-1">
-                <div className="flex items-center gap-1 text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
-                  {isAdvancedMode && <span className="text-blue-500 flex items-center gap-1"><Snowflake size={12}/>進階</span>}
-                </div>
-              </div>
+              {isAdvancedMode && <span className="text-blue-500 flex items-center gap-0.5 text-[10px] font-bold bg-gray-50 px-1.5 py-1 rounded-lg ml-1"><Snowflake size={10}/>進階</span>}
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setGameState('welcome')} className="p-2 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-all active:scale-90 shadow-sm" title="回首頁 / 離開遊戲">
-                <Home size={18} />
+            <div className="flex items-center gap-1">
+              <button onClick={() => setGameState('welcome')} className="p-1.5 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-all active:scale-90 shadow-sm" title="回首頁 / 離開遊戲">
+                <Home size={16} />
               </button>
-              <button onClick={handleShare} className="p-2 bg-blue-100 text-blue-500 rounded-xl hover:bg-blue-200 transition-all active:scale-90 shadow-sm" title="分享"><Share2 size={18} /></button>
-              <button onClick={() => setAudioEnabled(!audioEnabled)} className={`p-2 rounded-xl transition-all active:scale-90 shadow-sm ${audioEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                {audioEnabled ? <Volume2 size={18}/> : <VolumeX size={18}/>}
+              <button onClick={handleShare} className="p-1.5 bg-blue-100 text-blue-500 rounded-xl hover:bg-blue-200 transition-all active:scale-90 shadow-sm" title="分享"><Share2 size={16} /></button>
+              <button onClick={() => setAudioEnabled(!audioEnabled)} className={`p-1.5 rounded-xl transition-all active:scale-90 shadow-sm ${audioEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                {audioEnabled ? <Volume2 size={16}/> : <VolumeX size={16}/>}
               </button>
-              <button onClick={toggleFullscreen} className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all active:scale-90 shadow-sm" title="全螢幕">
-                {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+              <button onClick={toggleFullscreen} className="p-1.5 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all active:scale-90 shadow-sm" title="全螢幕">
+                {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
               </button>
-              <button onClick={() => setShowLeaderboardModal(true)} className="p-2 bg-yellow-100 text-yellow-700 rounded-xl hover:bg-yellow-200 transition-all active:scale-90 shadow-sm" title="排行榜">
-                <Trophy size={18} />
+              <button onClick={() => setShowLeaderboardModal(true)} className="p-1.5 bg-yellow-100 text-yellow-700 rounded-xl hover:bg-yellow-200 transition-all active:scale-90 shadow-sm" title="排行榜">
+                <Trophy size={16} />
               </button>
             </div>
           </div>
