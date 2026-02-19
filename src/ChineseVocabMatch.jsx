@@ -239,7 +239,19 @@ const FloatingDessertBackground = () => {
 // ----------------------------------------------------------------------
 
 export default function App() {
-  const [currentLesson, setCurrentLesson] = useState(0); 
+  // ✅ 修正：從 URL 初始化 currentLesson
+  const [currentLesson, setCurrentLesson] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const lessonId = searchParams.get('lesson');
+      // 確保 lessonId 存在且在 LESSON_DATA 中
+      if (lessonId && LESSON_DATA[lessonId]) {
+        return Number(lessonId);
+      }
+    }
+    return 0;
+  });
+
   const [board, setBoard] = useState([]);
   const [activeChars, setActiveChars] = useState([]); 
   const [colorMap, setColorMap] = useState({}); 
@@ -1067,9 +1079,6 @@ export default function App() {
                 <Target size={14} className="mb-0.5 text-pink-400"/>目標
               </span>
               
-              {/* ❌ 移除分隔線 */}
-              {/* <div className="h-8 w-px bg-pink-100 mx-1"></div> */}
-
               <div className="flex gap-1 justify-start flex-1 overflow-x-auto no-scrollbar text-black py-1">
                 {levelTargets.map((t, i) => {
                   const style = getCharStyle(t.char);
@@ -1347,8 +1356,6 @@ export default function App() {
         <div className="text-center text-gray-400 text-xs pb-2 text-black">Design by Sophia Wong</div>
       </div>
       
-      {/* ... 排行榜程式碼維持不變 ... */}
-
       {/* 排行榜 */}
       {showLeaderboardModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-6 text-black">
