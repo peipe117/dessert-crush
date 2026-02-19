@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { 
   Sparkles, RefreshCw, Trophy, BookOpen, Lightbulb, Share2, 
   Volume2, VolumeX, Bomb, Candy, Target, ArrowRight, X, Star, Plus, Snowflake, Home, Repeat,
-  Cake, Smartphone, Download, PenTool, HelpCircle, MousePointer2, Maximize, Minimize
+  Cake, Smartphone, Download, PenTool, HelpCircle, MousePointer2, Maximize, Minimize, Trash2
 } from 'lucide-react';
 
 // Firebase Imports
@@ -36,31 +36,37 @@ let LESSON_DATA = {
   9: "南北方裡校門口因為所",
   10: "本著退休次旅行法國",
   11: "動物園老希望但胖真長",
-  12: "久話高課寫沒題定意思"
+  12: "久話高課寫沒題定意思",
+  13: "🍰🍩🍪🍮🍦🍭🍬🍫" // 🍰 甜點關
 };
 
-const ZODIAC_MAP = {
+// 🗣️ 發音對照表 (包含生肖與甜點)
+const PRONUNCIATION_MAP = {
+  // 生肖
   "🐭": "鼠", "🐮": "牛", "🐯": "虎", "🐰": "兔", 
   "🐲": "龍", "🐍": "蛇", "🐴": "馬", "🐑": "羊", 
-  "🐵": "猴", "🐔": "雞", "🐶": "狗", "🐷": "豬"
+  "🐵": "猴", "🐔": "雞", "🐶": "狗", "🐷": "豬",
+  // 甜點
+  "🍰": "蛋糕", "🍩": "甜甜圈", "🍪": "餅乾", "🍮": "布丁",
+  "🍦": "冰淇淋", "🍭": "棒棒糖", "🍬": "糖果", "🍫": "巧克力"
 };
 
 const DESSERT_ICONS = ['🧁', '🍩', '🍰', '🍪', '🍮'];
 
-// 🎨 飽滿鮮豔的馬卡龍配色 (Original Saturated Palette) 🎨
+// 🎨 回歸初始風格 (Original Saturated Style) 但移除易混淆色 🎨
 const DISTINCT_PALETTE = [
-  { bg: "#FFCDD2", border: "#E53935", text: "#B71C1C" }, // 紅
-  { bg: "#FFE0B2", border: "#FB8C00", text: "#E65100" }, // 橙
-  { bg: "#FFF9C4", border: "#FBC02D", text: "#F57F17" }, // 黃
-  { bg: "#C8E6C9", border: "#43A047", text: "#1B5E20" }, // 綠
-  { bg: "#B2EBF2", border: "#00ACC1", text: "#006064" }, // 青
-  { bg: "#BBDEFB", border: "#1E88E5", text: "#0D47A1" }, // 藍
-  { bg: "#E1BEE7", border: "#8E24AA", text: "#4A148C" }, // 紫
-  { bg: "#D7CCC8", border: "#8D6E63", text: "#3E2723" }, // 棕
-  { bg: "#CFD8DC", border: "#607D8B", text: "#263238" }, // 灰藍
-  { bg: "#F0F4C3", border: "#AFB42B", text: "#827717" }, // 萊姆
-  { bg: "#F8BBD0", border: "#EC407A", text: "#880E4F" }, // 粉紅
-  { bg: "#B2DFDB", border: "#00897B", text: "#004D40" }, // 藍綠
+  { bg: "#FFCDD2", border: "#E53935", text: "#B71C1C" }, // 1. 紅 (Red)
+  { bg: "#FFE0B2", border: "#FB8C00", text: "#E65100" }, // 2. 橙 (Orange)
+  { bg: "#FFF9C4", border: "#FBC02D", text: "#F57F17" }, // 3. 黃 (Yellow)
+  { bg: "#C8E6C9", border: "#43A047", text: "#1B5E20" }, // 4. 綠 (Green)
+  { bg: "#B2EBF2", border: "#00ACC1", text: "#006064" }, // 5. 青 (Cyan)
+  { bg: "#BBDEFB", border: "#1E88E5", text: "#0D47A1" }, // 6. 藍 (Blue)
+  { bg: "#E1BEE7", border: "#8E24AA", text: "#4A148C" }, // 7. 紫 (Purple)
+  { bg: "#D7CCC8", border: "#8D6E63", text: "#3E2723" }, // 8. 棕 (Brown)
+  // 移除灰藍色 (太暗)
+  { bg: "#F0F4C3", border: "#AFB42B", text: "#827717" }, // 9. 萊姆 (Lime) - 與黃/綠區隔
+  { bg: "#F8BBD0", border: "#EC407A", text: "#880E4F" }, // 10. 粉紅 (Pink) - 與紅區隔
+  // 移除藍綠色 (易與青色混淆)
 ];
 
 // ✅ 請使用您自己的 Firebase Config ✅
@@ -86,7 +92,6 @@ try {
 // --- 音效工具 ---
 const audioCtx = typeof window !== 'undefined' ? new (window.AudioContext || window.webkitAudioContext)() : null;
 
-// ✅ 修改：增加 isEnabled 參數，控制是否播放音效
 const playSound = (type, isEnabled = true) => {
   if (!isEnabled) return; // 如果靜音，直接返回
   if (!audioCtx) return;
@@ -150,7 +155,8 @@ const speakText = (text, enabled) => {
   if (!enabled || !window.speechSynthesis) return;
   if (text === ITEM_BOMB || text === ITEM_CANDY) return;
   window.speechSynthesis.cancel();
-  const spoken = ZODIAC_MAP[text] || text;
+  // ✅ 使用發音對照表 (確保布丁念對)
+  const spoken = PRONUNCIATION_MAP[text] || text;
   const utterance = new SpeechSynthesisUtterance(String(spoken));
   utterance.lang = 'zh-TW';
   utterance.rate = 1.0;
@@ -263,11 +269,10 @@ export default function App() {
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [customText, setCustomText] = useState("");
 
-  // ✅ 修正：新增 inputName 狀態，區分「輸入中的名字」與「已確認的玩家名字」
   const [inputName, setInputName] = useState(() => {
     return typeof window !== 'undefined' ? (localStorage.getItem('wordcrush_player_name') || "") : "";
   });
-  const [playerName, setPlayerName] = useState(""); // 實際遊戲中使用的名字 (確認後才設定)
+  const [playerName, setPlayerName] = useState("");
 
   const [currentUser, setCurrentUser] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
@@ -482,6 +487,7 @@ export default function App() {
     const pool = LESSON_DATA[lesson] || LESSON_DATA[1];
     const allCharsInLesson = Array.from(new Set(Array.from(pool).filter(c => c.trim() !== '')));
     
+    // ✅ 這裡使用新的配色表，但因為有 shuffleArray，顏色會隨機分配
     const shuffledColors = shuffleArray(DISTINCT_PALETTE);
     const newGlobalColorMap = {};
     allCharsInLesson.forEach((char, index) => {
@@ -524,6 +530,21 @@ export default function App() {
       setCurrentLesson(999);
       setShowCustomModal(false);
       startNewLesson(999, false);
+  };
+
+  // ✅ 新增：刪除自訂題目的功能
+  const handleDeleteCustom = () => {
+      if (LESSON_DATA[999]) {
+          delete LESSON_DATA[999];
+      }
+      setCustomText("");
+      // 如果當前是在自訂關卡，強制跳回第0課
+      if (Number(currentLesson) === 999) {
+          setCurrentLesson(0);
+          startNewLesson(0, false);
+      }
+      setShowCustomModal(false);
+      showGameMessage("自訂題目已刪除");
   };
 
   const processBoard = async (startBoard) => {
@@ -854,8 +875,8 @@ export default function App() {
   };
 
   const goToNextLevel = () => {
-    // 邏輯：0(生肖) -> 1 -> 2 ... -> 12 -> 0 循環
-    const nextLesson = currentLesson < 12 ? currentLesson + 1 : 0;
+    // 邏輯：0(生肖) -> 1 -> 2 ... -> 12 -> 13 -> 0 循環
+    const nextLesson = currentLesson < 13 ? currentLesson + 1 : 0;
     setCurrentLesson(nextLesson);
     startNewLesson(nextLesson, false); 
   };
@@ -1040,12 +1061,16 @@ export default function App() {
         {/* Header */}
         <div className="w-full bg-white p-4 mb-4 flex flex-col gap-4 rounded-[32px] border-2 border-white shadow-sm text-black z-10 relative">
           <div className="flex justify-between items-center w-full px-2 text-black gap-2">
-            <div className="flex gap-3 items-center bg-gray-50 px-4 py-2 rounded-[24px] flex-1 relative overflow-hidden">
+            {/* ✅ 修正：移除中間的分隔線，並縮小 gap 與 padding 以節省空間 */}
+            <div className="flex gap-2 items-center bg-gray-50 px-2 py-2 rounded-[24px] flex-1 relative overflow-hidden">
               <span className="text-[10px] font-bold text-gray-400 uppercase flex flex-col items-center leading-none shrink-0">
                 <Target size={14} className="mb-0.5 text-pink-400"/>目標
               </span>
-              <div className="h-8 w-px bg-pink-100 mx-1"></div>
-              <div className="flex gap-3 justify-start flex-1 overflow-x-auto no-scrollbar text-black py-1">
+              
+              {/* ❌ 移除分隔線 */}
+              {/* <div className="h-8 w-px bg-pink-100 mx-1"></div> */}
+
+              <div className="flex gap-1 justify-start flex-1 overflow-x-auto no-scrollbar text-black py-1">
                 {levelTargets.map((t, i) => {
                   const style = getCharStyle(t.char);
                   return (
@@ -1072,8 +1097,8 @@ export default function App() {
                 })}
               </div>
             </div>
-            {/* ✅ SCORE 移到這裡 */}
-            <div className="flex flex-col items-center justify-center bg-pink-50 px-4 py-2 rounded-[24px] shrink-0 min-w-[80px] h-[60px]">
+            {/* ✅ SCORE 移到這裡，稍微縮小最小寬度 */}
+            <div className="flex flex-col items-center justify-center bg-pink-50 px-3 py-2 rounded-[24px] shrink-0 min-w-[70px] h-[60px]">
                 <div className="text-[10px] text-pink-400 font-black uppercase leading-none mb-1">Score</div>
                 <div className="text-xl font-black text-pink-600 leading-none">{Number(score)}</div>
             </div>
@@ -1083,7 +1108,7 @@ export default function App() {
             <div className="flex items-center gap-3">
               <select value={currentLesson} onChange={(e) => { const n = Number(e.target.value); setCurrentLesson(n); startNewLesson(n, false); }}
                       className="bg-gray-100 border-2 border-gray-100 rounded-2xl px-4 py-2 font-black text-pink-600 text-sm outline-none">
-                {Object.keys(LESSON_DATA).map(k => <option key={k} value={k}>{Number(k) === 0 ? "12生肖" : (Number(k) === 999 ? "✏️ 自訂題目" : `第 ${k} 課`)}</option>)}
+                {Object.keys(LESSON_DATA).map(k => <option key={k} value={k}>{Number(k) === 0 ? "🐲 生肖關" : (Number(k) === 13 ? "🍰 甜點關" : (Number(k) === 999 ? "✏️ 自訂題目" : `第 ${k} 課`))}</option>)}
               </select>
               <div className="flex items-center gap-1">
                 <button 
@@ -1234,7 +1259,7 @@ export default function App() {
                     {/* ✅ 修正：文字排版，加入 <br/> 換行 ✅ */}
                     {gameState === 'won' ? (
                         <>
-                            {playerName || '你'} 已經認識{Number(currentLesson) === 0 ? " 12生肖 所有動物" : (Number(currentLesson) === 999 ? " 自訂題目的所有生字" : `第 ${currentLesson} 課所有生字`)}了！
+                            {playerName || '你'} 已經認識{Number(currentLesson) === 0 ? " 12生肖 所有動物" : (Number(currentLesson) === 13 ? " 所有甜點" : (Number(currentLesson) === 999 ? " 自訂題目的所有生字" : `第 ${currentLesson} 課所有生字`))}了！
                         </>
                     ) : gameState === 'stage_cleared' ? (
                         <>
@@ -1307,8 +1332,13 @@ export default function App() {
                         onChange={(e) => setCustomText(e.target.value)}
                     />
                     <div className="flex gap-2 mt-4">
-                        <button onClick={() => setShowCustomModal(false)} className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-600 font-bold">取消</button>
-                        <button onClick={handleCustomStart} className="flex-1 py-3 rounded-xl bg-pink-500 text-white font-bold shadow-lg hover:bg-pink-600">開始遊戲</button>
+                        {LESSON_DATA[999] && (
+                             <button onClick={handleDeleteCustom} className="flex-none px-4 py-3 rounded-xl bg-red-100 text-red-500 font-bold hover:bg-red-200 transition-colors" title="刪除自訂題目">
+                                <Trash2 size={20}/>
+                             </button>
+                        )}
+                        <button onClick={() => setShowCustomModal(false)} className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-600 font-bold hover:bg-gray-200 transition-colors">取消</button>
+                        <button onClick={handleCustomStart} className="flex-1 py-3 rounded-xl bg-pink-500 text-white font-bold shadow-lg hover:bg-pink-600 transition-colors">開始遊戲</button>
                     </div>
                 </div>
             </div>
