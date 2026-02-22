@@ -154,8 +154,7 @@ let LESSON_DATA = {
   // 特別關卡
   "s-zodiac": "🐭🐮🐯🐰🐲🐍🐴🐑🐵🐔🐶🐷",
   "s-dessert": "🍰🍩🍪🍮🍦🍭🍬🍫",
-  "s-veg1": "🥬🥦🥕🌽🍆",
-  "s-veg2": "🍅🥔🧅🍄🥒",
+  "s-veg": "🥬🥦🥕🌽🍆🍅🥔🧅🍄🥒",
   "s-fruit": "🍎🍐🍊🍋🍌🍉🍇🍓🍈🍒🍑🥭🍍🥥🥝"
 };
 
@@ -234,10 +233,9 @@ const I18N = {
     special: "特別關卡",
     zodiac: "🐲 生肖關",
     dessert: "🍰 甜點關",
-    veg1: "🥦 青菜關 (一)",
-    veg2: "🥦 青菜關 (二)",
+    veg: "🥦 青菜關",
     fruit: "🍎 水果關",
-    custom: "✏️ 自訂題目",
+    customTitle: "自訂題目",
     customShort: "✏️自訂",
     lessonPrefix: "第 ",
     lessonSuffix: " 課",
@@ -248,7 +246,6 @@ const I18N = {
     cross: "閃電",
     hint: "提示",
     reset: "重置",
-    customTitle: "自訂題目",
     customDesc: "請輸入您想要練習的文字 (至少6個不同的字，支援中英數與注音)",
     customPlaceholder: "在此貼上文章或輸入生字...",
     deleteCustom: "刪除自訂題目",
@@ -337,10 +334,9 @@ const I18N = {
     special: "Special",
     zodiac: "🐲 Zodiac",
     dessert: "🍰 Desserts",
-    veg1: "🥦 Vegetables 1",
-    veg2: "🥦 Vegetables 2",
+    veg: "🥦 Vegetables",
     fruit: "🍎 Fruits",
-    custom: "✏️ Custom",
+    customTitle: "Custom Lesson",
     customShort: "✏️Custom",
     lessonPrefix: "Lesson ",
     lessonSuffix: "",
@@ -351,7 +347,6 @@ const I18N = {
     cross: "Lightning",
     hint: "Hint",
     reset: "Reset",
-    customTitle: "Custom Lesson",
     customDesc: "Enter text to practice (at least 6 different chars)",
     customPlaceholder: "Paste text or enter chars here...",
     deleteCustom: "Delete Custom Lesson",
@@ -418,8 +413,7 @@ const getLessonName = (key, t) => {
 
     if (key === 's-zodiac') return t.zodiac;
     if (key === 's-dessert') return t.dessert;
-    if (key === 's-veg1') return t.veg1;
-    if (key === 's-veg2') return t.veg2;
+    if (key === 's-veg') return t.veg;
     if (key === 's-fruit') return t.fruit;
     if (key === 'custom') return t.customTitle;
     
@@ -658,8 +652,9 @@ export default function App() {
   const [inputPassword, setInputPassword] = useState("");
   const [pwdError, setPwdError] = useState(false);
 
-  const [currentLesson, setCurrentLesson] = useState(getInitialLesson);
-  const [selectedBook, setSelectedBook] = useState(() => getBookFromLesson(getInitialLesson()));
+  const initialLessonForState = getInitialLesson();
+  const [currentLesson, setCurrentLesson] = useState(initialLessonForState);
+  const [selectedBook, setSelectedBook] = useState(() => getBookFromLesson(initialLessonForState));
 
   useEffect(() => {
       // 確保從遊戲內回到首頁，或透過網址載入時，首頁的選單能同步對應目前的冊別
@@ -671,8 +666,34 @@ export default function App() {
   const [colorMap, setColorMap] = useState({}); 
   const [selectedTile, setSelectedTile] = useState(null);
   
-  const [score, setScore] = useState(0); 
-  const [highScore, setHighScore] = useState(0);
+  // ✅ 修正：使用 localStorage 保留「同一課」的分數，防範手機瀏覽器重整導致分數歸零
+  const [score, setScore] = useState(() => {
+      if (typeof window !== 'undefined') {
+          const savedScore = localStorage.getItem('wordcrush_score');
+          const savedLesson = localStorage.getItem('wordcrush_lesson');
+          // 只有當儲存的關卡和現在的關卡一樣時，才恢復分數 (達成「換課才重新計分」)
+          if (savedLesson === initialLessonForState && savedScore) {
+              return Number(savedScore);
+          }
+      }
+      return 0;
+  }); 
+
+  // ✅ 新增：排行榜專用的最高分紀錄
+  const [highScore, setHighScore] = useState(() => {
+      if (typeof window !== 'undefined') {
+          return Number(localStorage.getItem('wordcrush_highscore')) || 0;
+      }
+      return 0;
+  });
+
+  // 分數或關卡改變時，即時備份至本地端防呆
+  useEffect(() => {
+      if (typeof window !== 'undefined') {
+          localStorage.setItem('wordcrush_score', score);
+          localStorage.setItem('wordcrush_lesson', currentLesson);
+      }
+  }, [score, currentLesson]);
 
   const [moves, setMoves] = useState(80); 
   const [gameState, setGameState] = useState('welcome'); 
@@ -930,7 +951,7 @@ export default function App() {
         boardChars = [...boardChars, ...fillers.slice(0, 6 - boardChars.length)];
     }
     
-    // ✅ 修正：在這裡為「當前關卡」的所有字（包含干擾字）分配「絕對不重複」的獨立顏色
+    // 在這裡為「當前關卡」的所有字（包含干擾字）分配「絕對不重複」的獨立顏色
     const shuffledColors = shuffleArray(DISTINCT_PALETTE);
     const stageColorMap = {};
     boardChars.forEach((char, index) => {
@@ -979,7 +1000,7 @@ export default function App() {
     setGameStages(stages);
     setCurrentStageIndex(0);
     
-    setScore(0);
+    // ✅ 移除 setScore(0)，讓分數在「同課重玩」或「進入下一階段」時保持累積
     setCombo(0);
     
     setIsProcessing(false);
@@ -1002,6 +1023,7 @@ export default function App() {
       }
       
       LESSON_DATA['custom'] = uniqueChars.join('');
+      setScore(0); // ✅ 重新開始自訂題目，分數歸零確保公平
       setCurrentLesson('custom');
       setShowCustomModal(false);
       startNewLesson('custom', false);
@@ -1013,6 +1035,7 @@ export default function App() {
       }
       setCustomText("");
       if (currentLesson === 'custom') {
+          setScore(0); // 換課歸零
           setCurrentLesson('z-1');
           startNewLesson('z-1', false);
       }
@@ -1094,10 +1117,16 @@ export default function App() {
         }
       });
       
+      // ✅ 修正計分邏輯：加上本次分數，並同步檢查是否破了單局最高分
+      const addedScore = matches.length * 10 * currentCombo;
       setScore(prev => {
-        const newScore = prev + (matches.length * 10 * currentCombo);
-        setHighScore(hs => Math.max(hs, newScore));
-        return newScore;
+          const newScore = prev + addedScore;
+          setHighScore(hs => {
+              const newHs = Math.max(hs, newScore);
+              if (typeof window !== 'undefined') localStorage.setItem('wordcrush_highscore', newHs);
+              return newHs;
+          });
+          return newScore;
       });
 
       setBoard([...tempBoard]);
@@ -1410,6 +1439,12 @@ export default function App() {
     localStorage.setItem('wordcrush_player_name', finalName);
     setPlayerName(finalName);
 
+    // 提前宣告變數，確保進入遊戲的關卡能被正確設定
+    let startLsn = currentLesson;
+    if (startLsn === 'new_custom') {
+        startLsn = 'custom';
+    }
+
     if (isFirebaseReady && db && currentUser) {
       try {
         const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', currentUser.uid);
@@ -1417,30 +1452,28 @@ export default function App() {
         let currentHighScore = highScore;
         
         if (docSnap.exists()) {
-          currentHighScore = Math.max(currentHighScore, docSnap.data().score || 0);
-          setHighScore(currentHighScore);
+          // 抓取雲端歷史最高分，確保排行榜名次不會掉
+          let dbHs = Number(docSnap.data().score) || 0;
+          if (dbHs > currentHighScore) {
+              currentHighScore = dbHs;
+              setHighScore(currentHighScore);
+              if (typeof window !== 'undefined') localStorage.setItem('wordcrush_highscore', currentHighScore);
+          }
         }
         
         await setDoc(docRef, {
           name: finalName,
           score: currentHighScore,
-          lesson: currentLesson === 'new_custom' ? 'custom' : currentLesson,
+          lesson: startLsn,
           lastSeen: serverTimestamp(),
           uid: currentUser.uid 
         }, { merge: true });
       } catch (err) { console.error(err); }
     }
     
-    // 首頁已經透過雙下拉選單確實設定好了 currentLesson，直接取用
-    let startLsn = currentLesson;
-    if (startLsn === 'new_custom') {
-        startLsn = 'custom';
-    }
-    
     setCurrentLesson(startLsn);
     startNewLesson(startLsn);
 
-    // 如果使用者選擇自訂題目且沒有資料，立刻跳出輸入框
     if (startLsn === 'custom' && !LESSON_DATA['custom']) {
         setShowCustomModal(true);
     }
@@ -1486,6 +1519,9 @@ export default function App() {
        nextLesson = 'z-1';
     }
     
+    if (nextLesson !== currentLesson) {
+        setScore(0); // ✅ 換課歸零
+    }
     setCurrentLesson(nextLesson);
     startNewLesson(nextLesson, false);
   };
@@ -1543,7 +1579,7 @@ export default function App() {
     return () => clearInterval(heartbeat);
   }, [isFirebaseReady, currentUser, playerName]);
 
-  // 自動同步分數：寫入的是 HighScore (最高紀錄)
+  // ✅ 自動同步最高分數：上傳的是單局歷史最高分，確保排行榜穩定
   useEffect(() => {
     if (isFirebaseReady && db && currentUser && highScore > 0 && playerName) {
       const saveToFirebase = async () => {
@@ -1678,7 +1714,11 @@ export default function App() {
                     const firstLessonMap = {
                         'b1': 'b1-1', 'b2': 'b2-1', 'b3': 'b3-1', 'b4': 'b4-1', 'b5': 'b5-1', 'b6': 'b6-1', 'b7': 'b7-1', 'b8': 'b8-1', 'b9': 'b9-1', 'b10': 'b10-1', 'z': 'z-1', 's': 's-zodiac', 'c': 'custom'
                     };
-                    setCurrentLesson(firstLessonMap[newBook] || 'z-1');
+                    const nextLsn = firstLessonMap[newBook] || 'z-1';
+                    if (nextLsn !== currentLesson) {
+                        setScore(0); // ✅ 換課歸零
+                        setCurrentLesson(nextLsn);
+                    }
                 }}
                         className="flex-1 px-2 py-4 rounded-2xl border-4 border-pink-50 text-lg focus:border-pink-300 focus:outline-none bg-white text-pink-600 font-black text-center text-center-last">
                     <option value="z">{t.zhuyin}</option>
@@ -1701,6 +1741,9 @@ export default function App() {
                         setCurrentLesson('new_custom');
                         setShowCustomModal(true);
                     } else {
+                        if (e.target.value !== currentLesson) {
+                            setScore(0); // ✅ 換課歸零
+                        }
                         setCurrentLesson(e.target.value);
                     }
                 }}
@@ -1871,6 +1914,7 @@ export default function App() {
                   if (val === 'new_custom') {
                       setShowCustomModal(true);
                   } else {
+                      if (val !== currentLesson) setScore(0); // ✅ 換課歸零
                       setCurrentLesson(val); 
                       startNewLesson(val, false); 
                   }
@@ -2071,16 +2115,19 @@ export default function App() {
                   )}
                   {gameState === 'won' && (
                       <>
-                        <button onClick={() => startNewLesson(currentLesson, false)} className="col-span-1 bg-gray-100 text-gray-600 py-3 rounded-2xl font-black hover:bg-gray-200">{t.playAgain}</button>
+                        {/* ✅ 再玩一次：分數歸零 */}
+                        <button onClick={() => { setScore(0); startNewLesson(currentLesson, false); }} className="col-span-1 bg-gray-100 text-gray-600 py-3 rounded-2xl font-black hover:bg-gray-200">{t.playAgain}</button>
                         <button onClick={goToNextLevel} className="col-span-1 bg-gradient-to-r from-blue-400 to-blue-500 text-white py-3 rounded-2xl font-black shadow-lg hover:brightness-110 active:translate-y-1">{t.nextLesson}</button>
                         
-                        <button onClick={() => startNewLesson(currentLesson, true)} className="col-span-2 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-4 rounded-2xl font-black shadow-[0_6px_0_#db2777] hover:brightness-110 active:translate-y-1 active:shadow-none transition-all text-xl flex items-center justify-center gap-2"><Snowflake size={20}/> {t.hardMode}</button>
+                        {/* ✅ 挑戰進階：分數歸零 */}
+                        <button onClick={() => { setScore(0); startNewLesson(currentLesson, true); }} className="col-span-2 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-4 rounded-2xl font-black shadow-[0_6px_0_#db2777] hover:brightness-110 active:translate-y-1 active:shadow-none transition-all text-xl flex items-center justify-center gap-2"><Snowflake size={20}/> {t.hardMode}</button>
                         
                         <button onClick={() => setGameState('welcome')} className="col-span-2 bg-white border-2 border-gray-100 text-gray-400 py-3 rounded-2xl font-bold hover:text-gray-600 flex items-center justify-center gap-2"><Home size={18}/> {t.endGame}</button>
                       </>
                   )}
                   {(gameState === 'lost' || gameState === 'won') && gameState !== 'won' && (
-                      <button onClick={() => startNewLesson(currentLesson, isAdvancedMode)} className="col-span-2 w-full bg-gray-100 text-gray-500 py-4 rounded-[25px] font-black hover:bg-gray-200 transition-all text-black flex items-center justify-center gap-2 text-xl">
+                      /* ✅ 失敗後再試一次：分數歸零 */
+                      <button onClick={() => { setScore(0); startNewLesson(currentLesson, isAdvancedMode); }} className="col-span-2 w-full bg-gray-100 text-gray-500 py-4 rounded-[25px] font-black hover:bg-gray-200 transition-all text-black flex items-center justify-center gap-2 text-xl">
                           <Repeat size={20}/> {t.tryAgain}
                       </button>
                   )}
@@ -2111,7 +2158,9 @@ export default function App() {
               <div className="relative text-yellow-400"><Lightbulb className="w-5 h-5 sm:w-6 sm:h-6" /></div>
               <span className="text-[10px] sm:text-xs font-black mt-1.5 text-black whitespace-nowrap">{t.hint}</span>
           </button>
-          <button onClick={() => startNewLesson(currentLesson)} className="flex-1 py-2.5 sm:py-3 bg-white rounded-[18px] sm:rounded-[24px] border-gray-100 border-2 flex flex-col items-center justify-center transition-all shadow-sm">
+          
+          {/* ✅ 工具列重新開始：分數歸零 */}
+          <button onClick={() => { setScore(0); startNewLesson(currentLesson); }} className="flex-1 py-2.5 sm:py-3 bg-white rounded-[18px] sm:rounded-[24px] border-gray-100 border-2 flex flex-col items-center justify-center transition-all shadow-sm">
               <div className="relative text-blue-400"><RefreshCw className="w-5 h-5 sm:w-6 sm:h-6" /></div>
               <span className="text-[10px] sm:text-xs font-black mt-1.5 text-black whitespace-nowrap">{t.reset}</span>
           </button>
