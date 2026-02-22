@@ -1424,22 +1424,17 @@ export default function App() {
         await setDoc(docRef, {
           name: finalName,
           score: currentHighScore,
-          lesson: currentLesson,
+          lesson: currentLesson === 'new_custom' ? 'custom' : currentLesson,
           lastSeen: serverTimestamp(),
           uid: currentUser.uid 
         }, { merge: true });
       } catch (err) { console.error(err); }
     }
     
-    const expectedBook = getBookFromLesson(currentLesson);
+    // 首頁已經透過雙下拉選單確實設定好了 currentLesson，直接取用
     let startLsn = currentLesson;
-    
-    // 如果首頁下拉選單的值和 URL 解析出來的所屬冊別不同，代表使用者手動改了首頁選單
-    if (selectedBook !== expectedBook) {
-        const firstLessonMap = {
-            'b1': 'b1-1', 'b2': 'b2-1', 'b3': 'b3-1', 'b4': 'b4-1', 'b5': 'b5-1', 'b6': 'b6-1', 'b7': 'b7-1', 'b8': 'b8-1', 'b9': 'b9-1', 'b10': 'b10-1', 'z': 'z-1', 's': 's-zodiac', 'c': 'custom'
-        };
-        startLsn = firstLessonMap[selectedBook] || 'z-1';
+    if (startLsn === 'new_custom') {
+        startLsn = 'custom';
     }
     
     setCurrentLesson(startLsn);
@@ -1676,22 +1671,66 @@ export default function App() {
           <h1 className="text-4xl font-black mb-2 text-pink-600">{t.title}</h1>
           <p className="text-gray-500 mb-8 font-bold text-black">{t.subtitle}</p>
           <form onSubmit={handleLogin} className="space-y-4">
-            <select value={selectedBook} onChange={(e) => setSelectedBook(e.target.value)}
-                    className="w-full px-6 py-4 rounded-2xl border-4 border-pink-50 text-xl focus:border-pink-300 focus:outline-none bg-white text-pink-600 font-black text-center text-center-last">
-                <option value="z">{t.zhuyin}</option>
-                <option value="b1">{t.book1}</option>
-                <option value="b2">{t.book2}</option>
-                <option value="b3">{t.book3}</option>
-                <option value="b4">{t.book4}</option>
-                <option value="b5">{t.book5}</option>
-                <option value="b6">{t.book6}</option>
-                <option value="b7">{t.book7}</option>
-                <option value="b8">{t.book8}</option>
-                <option value="b9">{t.book9}</option>
-                <option value="b10">{t.book10}</option>
-                <option value="s">{t.special}</option>
-                <option value="c">{t.customTitle}</option>
-            </select>
+            <div className="flex gap-2">
+                <select value={selectedBook} onChange={(e) => {
+                    const newBook = e.target.value;
+                    setSelectedBook(newBook);
+                    const firstLessonMap = {
+                        'b1': 'b1-1', 'b2': 'b2-1', 'b3': 'b3-1', 'b4': 'b4-1', 'b5': 'b5-1', 'b6': 'b6-1', 'b7': 'b7-1', 'b8': 'b8-1', 'b9': 'b9-1', 'b10': 'b10-1', 'z': 'z-1', 's': 's-zodiac', 'c': 'custom'
+                    };
+                    setCurrentLesson(firstLessonMap[newBook] || 'z-1');
+                }}
+                        className="flex-1 px-2 py-4 rounded-2xl border-4 border-pink-50 text-lg focus:border-pink-300 focus:outline-none bg-white text-pink-600 font-black text-center text-center-last">
+                    <option value="z">{t.zhuyin}</option>
+                    <option value="b1">{t.book1}</option>
+                    <option value="b2">{t.book2}</option>
+                    <option value="b3">{t.book3}</option>
+                    <option value="b4">{t.book4}</option>
+                    <option value="b5">{t.book5}</option>
+                    <option value="b6">{t.book6}</option>
+                    <option value="b7">{t.book7}</option>
+                    <option value="b8">{t.book8}</option>
+                    <option value="b9">{t.book9}</option>
+                    <option value="b10">{t.book10}</option>
+                    <option value="s">{t.special}</option>
+                    <option value="c">{t.customTitle}</option>
+                </select>
+
+                <select value={currentLesson} onChange={(e) => {
+                    if (e.target.value === 'new_custom') {
+                        setCurrentLesson('new_custom');
+                        setShowCustomModal(true);
+                    } else {
+                        setCurrentLesson(e.target.value);
+                    }
+                }}
+                        className="flex-1 px-2 py-4 rounded-2xl border-4 border-pink-50 text-lg focus:border-pink-300 focus:outline-none bg-white text-pink-600 font-black text-center text-center-last">
+                    {selectedBook === 'z' && (
+                       <>
+                           <option value="z-1">{t.z1}</option>
+                           <option value="z-2">{t.z2}</option>
+                           <option value="z-3">{t.z3}</option>
+                       </>
+                    )}
+                    {['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'b10'].includes(selectedBook) && 
+                        [...Array(12)].map((_, i) => LESSON_DATA[`${selectedBook}-${i+1}`] ? <option key={`${selectedBook}-${i+1}`} value={`${selectedBook}-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)
+                    }
+                    {selectedBook === 's' && (
+                       <>
+                           <option value="s-zodiac">{t.zodiac}</option>
+                           <option value="s-dessert">{t.dessert}</option>
+                           <option value="s-veg">{t.veg}</option>
+                           <option value="s-fruit">{t.fruit}</option>
+                       </>
+                    )}
+                    {selectedBook === 'c' && (
+                       <>
+                           <option value="custom">{LESSON_DATA['custom'] ? t.customShort : t.customTitle}</option>
+                           <option value="new_custom">{t.addCustom}</option>
+                       </>
+                    )}
+                </select>
+            </div>
             <input type="text" value={String(inputName)} onChange={(e) => setInputName(e.target.value)} placeholder={t.namePlaceholder}
                    className="w-full px-6 py-4 rounded-2xl border-4 border-pink-50 mb-2 text-xl focus:border-pink-300 focus:outline-none bg-gray-50 text-black placeholder-gray-300 text-center" required />
             <button type="submit" className="w-full bg-pink-500 text-white font-black py-4 rounded-2xl text-xl active:translate-y-1 mt-2">
