@@ -601,6 +601,35 @@ const FloatingDessertBackground = () => {
 // 主程式組件
 // ----------------------------------------------------------------------
 
+const getBookFromLesson = (lesson) => {
+    if (!lesson) return 'z';
+    if (lesson === 'custom' || lesson === 'new_custom') return 'c';
+    if (String(lesson).startsWith('s-')) return 's';
+    if (String(lesson).startsWith('z-')) return 'z';
+    const match = String(lesson).match(/^(b\d+)-/);
+    if (match) return match[1];
+    return 'z';
+};
+
+const getInitialLesson = () => {
+  if (typeof window !== 'undefined') {
+    const searchParams = new URLSearchParams(window.location.search);
+    const lessonId = searchParams.get('lesson');
+    if (lessonId) {
+        const numId = Number(lessonId);
+        if (!isNaN(numId) && String(lessonId).trim() !== '') { // 相容舊版連結
+             if (numId === 0) return 's-zodiac';
+             else if (numId === 13) return 's-dessert';
+             else if (numId === 999) return 'custom';
+             else if (numId >= 1 && numId <= 12) return `b2-${numId}`;
+        } else if (LESSON_DATA[lessonId] || lessonId === 'custom') {
+             return lessonId;
+        }
+    }
+  }
+  return 'z-1';
+};
+
 export default function App() {
   const [lang, setLang] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -629,30 +658,13 @@ export default function App() {
   const [inputPassword, setInputPassword] = useState("");
   const [pwdError, setPwdError] = useState(false);
 
-  // 首頁選擇的冊別
-  const [selectedBook, setSelectedBook] = useState('z');
+  const [currentLesson, setCurrentLesson] = useState(getInitialLesson);
+  const [selectedBook, setSelectedBook] = useState(() => getBookFromLesson(getInitialLesson()));
 
-  const [currentLesson, setCurrentLesson] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const searchParams = new URLSearchParams(window.location.search);
-      const lessonId = searchParams.get('lesson');
-      
-      let initialLesson = 'z-1';
-      if (lessonId) {
-          const numId = Number(lessonId);
-          if (!isNaN(numId)) { // 相容舊版連結
-               if (numId === 0) initialLesson = 's-zodiac';
-               else if (numId === 13) initialLesson = 's-dessert';
-               else if (numId === 999) initialLesson = 'custom';
-               else if (numId >= 1 && numId <= 12) initialLesson = `b2-${numId}`;
-          } else if (LESSON_DATA[lessonId]) {
-               initialLesson = lessonId;
-          }
-      }
-      return initialLesson;
-    }
-    return 'z-1';
-  });
+  useEffect(() => {
+      // 確保從遊戲內回到首頁，或透過網址載入時，首頁的選單能同步對應目前的冊別
+      setSelectedBook(getBookFromLesson(currentLesson));
+  }, [currentLesson]);
 
   const [board, setBoard] = useState([]);
   const [activeChars, setActiveChars] = useState([]); 
@@ -1419,11 +1431,16 @@ export default function App() {
       } catch (err) { console.error(err); }
     }
     
-    // 首頁依據所選冊別決定開始關卡，新增 'c' 代表自訂題目
-    const firstLessonMap = {
-        'b1': 'b1-1', 'b2': 'b2-1', 'b3': 'b3-1', 'b4': 'b4-1', 'b5': 'b5-1', 'b6': 'b6-1', 'b7': 'b7-1', 'b8': 'b8-1', 'b9': 'b9-1', 'b10': 'b10-1', 'z': 'z-1', 's': 's-zodiac', 'c': 'custom'
-    };
-    const startLsn = firstLessonMap[selectedBook] || 'z-1';
+    const expectedBook = getBookFromLesson(currentLesson);
+    let startLsn = currentLesson;
+    
+    // 如果首頁下拉選單的值和 URL 解析出來的所屬冊別不同，代表使用者手動改了首頁選單
+    if (selectedBook !== expectedBook) {
+        const firstLessonMap = {
+            'b1': 'b1-1', 'b2': 'b2-1', 'b3': 'b3-1', 'b4': 'b4-1', 'b5': 'b5-1', 'b6': 'b6-1', 'b7': 'b7-1', 'b8': 'b8-1', 'b9': 'b9-1', 'b10': 'b10-1', 'z': 'z-1', 's': 's-zodiac', 'c': 'custom'
+        };
+        startLsn = firstLessonMap[selectedBook] || 'z-1';
+    }
     
     setCurrentLesson(startLsn);
     startNewLesson(startLsn);
