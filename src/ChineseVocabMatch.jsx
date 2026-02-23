@@ -1004,6 +1004,11 @@ export default function App() {
     
     // ✅ 移除 setScore(0)，讓分數在「同課重玩」或「進入下一階段」時保持累積
     setCombo(0);
+
+    // ✅ 過關到其他課（或重新開始此課）時，寶物歸零重計，確保遊戲挑戰性
+    setBombCount(0);
+    setCandyCount(0);
+    setCrossCount(0);
     
     setIsProcessing(false);
     setSelectedTile(null);
@@ -1077,8 +1082,10 @@ export default function App() {
 
       let spawnReward = null;
       let spawnIndex = -1;
-      if (matches.length >= 5) spawnReward = ITEM_CROSS;
-      else if (currentCombo >= 3) spawnReward = ITEM_CANDY;
+      
+      // ✅ 確保 3 Combo 絕對優先掉落糖果 (Candy)
+      if (currentCombo >= 3) spawnReward = ITEM_CANDY;
+      else if (matches.length >= 5) spawnReward = ITEM_CROSS;
       else if (matches.length >= 4) spawnReward = ITEM_BOMB;
       
       if (spawnReward) spawnIndex = Math.floor(matches.length / 2);
