@@ -151,7 +151,7 @@ let LESSON_DATA = {
   "z-1": "ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙ",
   "z-2": "ㄧㄨㄩㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦ",
   "z-3": ["ㄧㄚ", "ㄧㄛ", "ㄧㄝ", "ㄧㄞ", "ㄧㄠ", "ㄧㄡ", "ㄧㄢ", "ㄧㄣ", "ㄧㄤ", "ㄧㄥ", "ㄨㄚ", "ㄨㄛ", "ㄨㄞ", "ㄨㄟ", "ㄨㄢ", "ㄨㄣ", "ㄨㄤ", "ㄨㄥ", "ㄩㄝ", "ㄩㄢ", "ㄩㄣ", "ㄩㄥ"],
-  // 特別關卡
+  // 幼幼關
   "s-zodiac": "🐭🐮🐯🐰🐲🐍🐴🐑🐵🐔🐶🐷",
   "s-dessert": "🍰🍩🍪🍮🍦🍭🍬🍫",
   "s-veg": "🥬🥦🥕🌽🍆🍅🥔🧅🍄🥒",
@@ -230,7 +230,7 @@ const I18N = {
     z1: "聲母 (21個)",
     z2: "韻母 (16個)",
     z3: "結合韻符 (22種)",
-    special: "特別關卡",
+    special: "幼幼關",
     zodiac: "🐲 生肖關",
     dessert: "🍰 甜點關",
     veg: "🥦 青菜關",
@@ -331,7 +331,7 @@ const I18N = {
     z1: "Consonants (21)",
     z2: "Vowels (16)",
     z3: "Combined (22)",
-    special: "Special",
+    special: "Toddler",
     zodiac: "🐲 Zodiac",
     dessert: "🍰 Desserts",
     veg: "🥦 Vegetables",
@@ -596,13 +596,13 @@ const FloatingDessertBackground = () => {
 // ----------------------------------------------------------------------
 
 const getBookFromLesson = (lesson) => {
-    if (!lesson) return 'z';
+    if (!lesson) return 's';
     if (lesson === 'custom' || lesson === 'new_custom') return 'c';
     if (String(lesson).startsWith('s-')) return 's';
     if (String(lesson).startsWith('z-')) return 'z';
     const match = String(lesson).match(/^(b\d+)-/);
     if (match) return match[1];
-    return 'z';
+    return 's';
 };
 
 const getInitialLesson = () => {
@@ -621,7 +621,7 @@ const getInitialLesson = () => {
         }
     }
   }
-  return 'z-1';
+  return 's-zodiac';
 };
 
 export default function App() {
@@ -982,10 +982,12 @@ export default function App() {
 
     const isSpecial = String(lesson).startsWith('s-') || String(lesson).startsWith('z-') || lesson === 'custom';
     let chunkSize = 5;
+    
+    // ✅ 強制設定特定關卡的單局數量
     if (lesson === 's-zodiac') chunkSize = 4;
     else if (lesson === 's-dessert') chunkSize = 4;
-    else if (lesson === 's-veg') chunkSize = 5;
-    else if (lesson === 's-fruit') chunkSize = 5;
+    else if (lesson === 's-veg') chunkSize = 5; // 青菜關強制每次 5 個
+    else if (lesson === 's-fruit') chunkSize = 5; // 水果關強制每次 5 個
     else if (isSpecial) {
         chunkSize = allCharsInLesson.length === 5 ? 5 : 4;
     } else if (allCharsInLesson.length <= 8) {
@@ -1360,8 +1362,11 @@ export default function App() {
       }
       setLevelTargets(prev => prev.map(t => {
         if (t.char === target && t.count > 0) {
-            setShowConfetti(true); setTimeout(() => setShowConfetti(false), 2500);
-            return {...t, count: 0};
+            const newCount = Math.max(0, t.count - count);
+            if (newCount === 0) {
+                setShowConfetti(true); setTimeout(() => setShowConfetti(false), 2500);
+            }
+            return {...t, count: newCount};
         }
         return t;
       }));
@@ -1488,7 +1493,7 @@ export default function App() {
   };
 
   const goToNextLevel = () => {
-    let nextLesson = "z-1";
+    let nextLesson = "s-zodiac";
     const parts = String(currentLesson).split('-');
     
     if (parts[0].startsWith('b')) {
@@ -1516,7 +1521,7 @@ export default function App() {
     } else if (currentLesson === 'custom') {
        nextLesson = 'custom';
     } else {
-       nextLesson = 'z-1';
+       nextLesson = 's-zodiac';
     }
     
     if (nextLesson !== currentLesson) {
@@ -1712,15 +1717,16 @@ export default function App() {
                     const newBook = e.target.value;
                     setSelectedBook(newBook);
                     const firstLessonMap = {
-                        'b1': 'b1-1', 'b2': 'b2-1', 'b3': 'b3-1', 'b4': 'b4-1', 'b5': 'b5-1', 'b6': 'b6-1', 'b7': 'b7-1', 'b8': 'b8-1', 'b9': 'b9-1', 'b10': 'b10-1', 'z': 'z-1', 's': 's-zodiac', 'c': 'custom'
+                        's': 's-zodiac', 'z': 'z-1', 'b1': 'b1-1', 'b2': 'b2-1', 'b3': 'b3-1', 'b4': 'b4-1', 'b5': 'b5-1', 'b6': 'b6-1', 'b7': 'b7-1', 'b8': 'b8-1', 'b9': 'b9-1', 'b10': 'b10-1', 'c': 'custom'
                     };
-                    const nextLsn = firstLessonMap[newBook] || 'z-1';
+                    const nextLsn = firstLessonMap[newBook] || 's-zodiac';
                     if (nextLsn !== currentLesson) {
                         setScore(0); // ✅ 換課歸零
                         setCurrentLesson(nextLsn);
                     }
                 }}
                         className="flex-1 px-2 py-4 rounded-2xl border-4 border-pink-50 text-lg focus:border-pink-300 focus:outline-none bg-white text-pink-600 font-black text-center text-center-last">
+                    <option value="s">{t.special}</option>
                     <option value="z">{t.zhuyin}</option>
                     <option value="b1">{t.book1}</option>
                     <option value="b2">{t.book2}</option>
@@ -1732,7 +1738,6 @@ export default function App() {
                     <option value="b8">{t.book8}</option>
                     <option value="b9">{t.book9}</option>
                     <option value="b10">{t.book10}</option>
-                    <option value="s">{t.special}</option>
                     <option value="c">{t.customTitle}</option>
                 </select>
 
@@ -1748,6 +1753,14 @@ export default function App() {
                     }
                 }}
                         className="flex-1 px-2 py-4 rounded-2xl border-4 border-pink-50 text-lg focus:border-pink-300 focus:outline-none bg-white text-pink-600 font-black text-center text-center-last">
+                    {selectedBook === 's' && (
+                       <>
+                           <option value="s-zodiac">{t.zodiac}</option>
+                           <option value="s-dessert">{t.dessert}</option>
+                           <option value="s-veg">{t.veg}</option>
+                           <option value="s-fruit">{t.fruit}</option>
+                       </>
+                    )}
                     {selectedBook === 'z' && (
                        <>
                            <option value="z-1">{t.z1}</option>
@@ -1758,14 +1771,6 @@ export default function App() {
                     {['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'b10'].includes(selectedBook) && 
                         [...Array(12)].map((_, i) => LESSON_DATA[`${selectedBook}-${i+1}`] ? <option key={`${selectedBook}-${i+1}`} value={`${selectedBook}-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)
                     }
-                    {selectedBook === 's' && (
-                       <>
-                           <option value="s-zodiac">{t.zodiac}</option>
-                           <option value="s-dessert">{t.dessert}</option>
-                           <option value="s-veg">{t.veg}</option>
-                           <option value="s-fruit">{t.fruit}</option>
-                       </>
-                    )}
                     {selectedBook === 'c' && (
                        <>
                            <option value="custom">{LESSON_DATA['custom'] ? t.customShort : t.customTitle}</option>
@@ -1922,23 +1927,6 @@ export default function App() {
                       className="bg-gray-100 border-2 border-gray-100 rounded-2xl px-2 py-1.5 font-black text-pink-600 text-[11px] sm:text-sm outline-none w-24 sm:w-28 text-center truncate">
                 
                 {/* 動態顯示當前冊別的課程 */}
-                {currentGroup === 'z' && (
-                   <optgroup label={t.zhuyin}>
-                       <option value="z-1">{t.z1}</option>
-                       <option value="z-2">{t.z2}</option>
-                       <option value="z-3">{t.z3}</option>
-                   </optgroup>
-                )}
-                {currentGroup === 'b1' && [...Array(12)].map((_, i) => LESSON_DATA[`b1-${i+1}`] ? <option key={`b1-${i+1}`} value={`b1-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
-                {currentGroup === 'b2' && [...Array(12)].map((_, i) => LESSON_DATA[`b2-${i+1}`] ? <option key={`b2-${i+1}`} value={`b2-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
-                {currentGroup === 'b3' && [...Array(12)].map((_, i) => LESSON_DATA[`b3-${i+1}`] ? <option key={`b3-${i+1}`} value={`b3-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
-                {currentGroup === 'b4' && [...Array(12)].map((_, i) => LESSON_DATA[`b4-${i+1}`] ? <option key={`b4-${i+1}`} value={`b4-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
-                {currentGroup === 'b5' && [...Array(12)].map((_, i) => LESSON_DATA[`b5-${i+1}`] ? <option key={`b5-${i+1}`} value={`b5-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
-                {currentGroup === 'b6' && [...Array(12)].map((_, i) => LESSON_DATA[`b6-${i+1}`] ? <option key={`b6-${i+1}`} value={`b6-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
-                {currentGroup === 'b7' && [...Array(12)].map((_, i) => LESSON_DATA[`b7-${i+1}`] ? <option key={`b7-${i+1}`} value={`b7-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
-                {currentGroup === 'b8' && [...Array(12)].map((_, i) => LESSON_DATA[`b8-${i+1}`] ? <option key={`b8-${i+1}`} value={`b8-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
-                {currentGroup === 'b9' && [...Array(12)].map((_, i) => LESSON_DATA[`b9-${i+1}`] ? <option key={`b9-${i+1}`} value={`b9-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
-                {currentGroup === 'b10' && [...Array(12)].map((_, i) => LESSON_DATA[`b10-${i+1}`] ? <option key={`b10-${i+1}`} value={`b10-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
                 {currentGroup === 's' && (
                    <optgroup label={t.special}>
                        <option value="s-zodiac">{t.zodiac}</option>
