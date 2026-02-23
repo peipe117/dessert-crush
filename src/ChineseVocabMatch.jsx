@@ -1927,6 +1927,23 @@ export default function App() {
                       className="bg-gray-100 border-2 border-gray-100 rounded-2xl px-2 py-1.5 font-black text-pink-600 text-[11px] sm:text-sm outline-none w-24 sm:w-28 text-center truncate">
                 
                 {/* 動態顯示當前冊別的課程 */}
+                {currentGroup === 'z' && (
+                   <optgroup label={t.zhuyin}>
+                       <option value="z-1">{t.z1}</option>
+                       <option value="z-2">{t.z2}</option>
+                       <option value="z-3">{t.z3}</option>
+                   </optgroup>
+                )}
+                {currentGroup === 'b1' && [...Array(12)].map((_, i) => LESSON_DATA[`b1-${i+1}`] ? <option key={`b1-${i+1}`} value={`b1-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
+                {currentGroup === 'b2' && [...Array(12)].map((_, i) => LESSON_DATA[`b2-${i+1}`] ? <option key={`b2-${i+1}`} value={`b2-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
+                {currentGroup === 'b3' && [...Array(12)].map((_, i) => LESSON_DATA[`b3-${i+1}`] ? <option key={`b3-${i+1}`} value={`b3-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
+                {currentGroup === 'b4' && [...Array(12)].map((_, i) => LESSON_DATA[`b4-${i+1}`] ? <option key={`b4-${i+1}`} value={`b4-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
+                {currentGroup === 'b5' && [...Array(12)].map((_, i) => LESSON_DATA[`b5-${i+1}`] ? <option key={`b5-${i+1}`} value={`b5-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
+                {currentGroup === 'b6' && [...Array(12)].map((_, i) => LESSON_DATA[`b6-${i+1}`] ? <option key={`b6-${i+1}`} value={`b6-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
+                {currentGroup === 'b7' && [...Array(12)].map((_, i) => LESSON_DATA[`b7-${i+1}`] ? <option key={`b7-${i+1}`} value={`b7-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
+                {currentGroup === 'b8' && [...Array(12)].map((_, i) => LESSON_DATA[`b8-${i+1}`] ? <option key={`b8-${i+1}`} value={`b8-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
+                {currentGroup === 'b9' && [...Array(12)].map((_, i) => LESSON_DATA[`b9-${i+1}`] ? <option key={`b9-${i+1}`} value={`b9-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
+                {currentGroup === 'b10' && [...Array(12)].map((_, i) => LESSON_DATA[`b10-${i+1}`] ? <option key={`b10-${i+1}`} value={`b10-${i+1}`}>{t.lessonPrefix}{i+1}{t.lessonSuffix}</option> : null)}
                 {currentGroup === 's' && (
                    <optgroup label={t.special}>
                        <option value="s-zodiac">{t.zodiac}</option>
