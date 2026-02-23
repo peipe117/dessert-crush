@@ -212,7 +212,7 @@ const I18N = {
     help2: "2. 收集目標",
     help2Desc: "注意看最上面的目標，把它們的數量都變成 0 就過關囉！",
     help3: "3. 寶物獎勵",
-    help3Desc: "消除4個得炸彈，3連鎖得閃電，點擊收集或發動它們！",
+    help3Desc: "消除4個得炸彈，5個得閃電，3連鎖得糖果，點擊收集或發動它們！",
     startChallenge: "開始挑戰！",
     target: "目標",
     score: "Score",
@@ -313,7 +313,7 @@ const I18N = {
     help2: "2. Collect Targets",
     help2Desc: "Watch the targets at the top, reduce their count to 0 to pass!",
     help3: "3. Power-ups",
-    help3Desc: "Match 4 for Bombs, 3 Combo for Lightning. Click to collect or use them!",
+    help3Desc: "Match 4 for Bombs, 5 for Lightning, 3 Combo for Candies. Click to collect or use them!",
     startChallenge: "Start Challenge!",
     target: "TARGET",
     score: "Score",
@@ -1077,8 +1077,8 @@ export default function App() {
 
       let spawnReward = null;
       let spawnIndex = -1;
-      if (matches.length >= 5) spawnReward = ITEM_CANDY;
-      else if (currentCombo >= 3) spawnReward = ITEM_CROSS;
+      if (matches.length >= 5) spawnReward = ITEM_CROSS;
+      else if (currentCombo >= 3) spawnReward = ITEM_CANDY;
       else if (matches.length >= 4) spawnReward = ITEM_BOMB;
       
       if (spawnReward) spawnIndex = Math.floor(matches.length / 2);
