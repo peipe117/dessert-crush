@@ -64,44 +64,44 @@ const ZHUYIN_PINYIN_MAP = {
 };
 
 const RAW_DICT_CHUNKS = [
-  "你|ㄋㄧˇ|nǐ|7|你好|you|你好嗎？_好|ㄏㄠˇ|hǎo|6|很好|good|今天天氣很好。_我|ㄨㄛˇ|wǒ|7|我們|I / me|我是一個學生。_是|ㄕˋ|shì|9|不是|am / is / are|這是一本書。_他|ㄊㄚ|tā|5|他們|he / him|他是我的好朋友。",
-  "有|ㄧㄡˇ|yǒu|6|沒有|have / has|我有一個蘋果。_幾|ㄐㄧˇ|jǐ|12|幾個|how many|你有幾個蘋果？_個|ㄍㄜ˙|ge|10|一個|measure word|這是一個人。_人|ㄖㄣˊ|rén|2|好人|person|那裡有很多人。_爸|ㄅㄚˋ|bà|8|爸爸|dad|爸爸在工作。",
-  "媽|ㄇㄚ|mā|13|媽媽|mom|媽媽在煮飯。_一|ㄧ|yī|1|一個|one|我有一隻狗。_二|ㄦˋ|èr|2|第二|two|今天是星期二。_三|ㄙㄢ|sān|3|三天|three|我有三本書。_四|ㄙˋ|sì|5|四周|four|一年有四季。",
-  "五|ㄨˇ|wǔ|4|五天|five|我買了五顆蘋果。_六|ㄌㄧㄡˋ|liù|4|六天|six|桌上有六支筆。_七|ㄑㄧ|qī|2|七天|seven|一個星期有七天。_八|ㄅㄚ|bā|2|八天|eight|他吃了八顆糖果。_九|ㄐㄧㄡˇ|jiǔ|2|九天|nine|哥哥有九本故事書。",
-  "十|ㄕˊ|shí|2|十天|ten|我的雙手有十根手指。_也|ㄧㄝˇ|yě|3|也是|also / too|我也喜歡吃蘋果。_們|ㄇㄣ˙|men|10|我們|plural suffix|我們一起去玩吧。_男|ㄋㄢˊ|nán|7|男生|male / man|他是一個男生。_女|ㄋㄩˇ|nǚ|3|女生|female / woman|她是一個漂亮的女生。",
-  "生|ㄕㄥ|shēng|5|生日|born / student|今天是我的生日。_來|ㄌㄞˊ|lái|8|過來|come|請你過來這裡。_吃|ㄔ|chī|6|吃飯|eat|我喜歡吃蘋果。_喝|ㄏㄜ|hē|12|喝水|drink|口渴要多喝水。_要|ㄧㄠˋ|yào|9|需要|want / need|我要去上學了。",
-  "今|ㄐㄧㄣ|jīn|4|今天|today|今天天氣真不錯。_天|ㄊㄧㄢ|tiān|4|天空|sky / day|天空好藍喔！_很|ㄏㄣˇ|hěn|9|很好|very|這顆蘋果很大。_不|ㄅㄨˋ|bù|4|不要|not / no|我不想去玩。_太|ㄊㄞˋ|tài|4|太陽|too / extremely|今天天氣太熱了。",
-  "了|ㄌㄜ˙|le|2|來了|particle|我已經吃飽了。_喜|ㄒㄧˇ|xǐ|12|喜歡|like / happy|我最喜歡吃蛋糕。_歡|ㄏㄨㄢ|huān|22|歡樂|joyous / happy|大家一起玩真歡樂。_的|ㄉㄜ˙|de|8|我的|possessive particle|這是我的書。_日|ㄖˋ|rì|4|日期|sun / day|祝你生日快樂。",
-  "月|ㄩㄝˋ|yuè|4|月亮|moon / month|今晚的月亮好圓。_快|ㄎㄨㄞˋ|kuài|7|快樂|fast / happy|他跑得非常快。_到|ㄉㄠˋ|dào|8|到達|arrive / to|火車已經到站了。_玩|ㄨㄢˊ|wán|8|好玩|play|我們一起去公園玩。_什|ㄕㄣˊ|shén|4|什麼|what|你在做什麼？",
-  "麼|ㄇㄜ˙|me|14|怎麼|particle for what|為什麼會這麼痛？_手|ㄕㄡˇ|shǒu|4|洗手|hand|吃飯前要先洗手。_頭|ㄊㄡˊ|tóu|16|頭髮|head|我的頭好痛喔。_眼|ㄧㄢˇ|yǎn|11|眼睛|eye|他的眼睛很大。_看|ㄎㄢˋ|kàn|9|看書|look / see|我喜歡看故事書。",
-  "大|ㄉㄚˋ|dà|3|大小|big|大象是很大的動物。_小|ㄒㄧㄠˇ|xiǎo|3|小孩|small|那是一隻可愛的小狗。_下|ㄒㄧㄚˋ|xià|3|下面|down / below|蘋果掉到樹下了。_常|ㄔㄤˊ|cháng|11|常常|often|我常常去圖書館。_打|ㄉㄚˇ|dǎ|5|打球|hit / play|下課後我們去打球。",
-  "球|ㄑㄧㄡˊ|qiú|11|籃球|ball|哥哥很會打籃球。_做|ㄗㄨㄛˋ|zuò|11|做事|do / make|我正在做功課。_吧|ㄅㄚ˙|ba|7|好吧|particle|我們一起回家吧！_在|ㄗㄞˋ|zài|6|現在|at / in / on|媽媽在廚房煮飯。_哪|ㄋㄚˇ|nǎ|10|哪裡|where / which|請問你要去哪裡？",
-  "上|ㄕㄤˋ|shàng|3|上面|up / above|書在桌子上。_都|ㄉㄡ|dōu|11|都是|all / both|我們都是好朋友。_找|ㄓㄠˇ|zhǎo|7|找到|find / look for|我在找我的鉛筆。_這|ㄓㄜˋ|zhè|11|這裡|this|這是一塊好吃的蛋糕。_那|ㄋㄚˋ|nà|11|那裡|that|那裡有一棵大樹。",
-  "張|ㄓㄤ|zhāng|11|紙張|sheet|請給我一張圖畫紙。_中|ㄓㄨㄥ|zhōng|4|中間|middle / center|他在操場的正中間。_兩|ㄌㄧㄤˇ|liǎng|8|兩個|two / both|我有兩顆糖果。_右|ㄧㄡˋ|yòu|5|右邊|right side|我的右邊是妹妹。_怎|ㄗㄣˇ|zěn|9|怎麼|how|這題數學怎麼算？",
-  "想|ㄒㄧㄤˇ|xiǎng|13|想要|want to / think|我想要喝果汁。_開|ㄎㄞ|kāi|12|開門|open / start|請幫我開門。_走|ㄗㄡˇ|zǒu|7|走路|walk / go|我們走路去學校。_路|ㄌㄨˋ|lù|13|馬路|road / path|過馬路要小心。_坐|ㄗㄨㄛˋ|zuò|7|坐下|sit|請大家坐好。",
-  "請|ㄑㄧㄥˇ|qǐng|15|請問|please|請你幫我一個忙。_問|ㄨㄣˋ|wèn|11|問題|ask|我有問題想問老師。_朋|ㄆㄥˊ|péng|8|朋友|friend|我認識了新朋友。_友|ㄧㄡˇ|yǒu|4|朋友|friend|他是我的好朋友。_機|ㄐㄧ|jī|16|飛機|machine|天上有飛機飛過。_再|ㄗㄞˋ|zài|6|再見|again|放學了，大家再見！",
-  "新|ㄒㄧㄣ|xīn|13|新年|new|這是一本新書。_同|ㄊㄨㄥˊ|tóng|6|同學|same / together|我們是同班同學。_學|ㄒㄩㄝˊ|xué|16|學校|learn / study|我在學校學習。_自|ㄗˋ|zì|6|自己|self|我自己走路去學校。_己|ㄐㄧˇ|jǐ|3|自己|self|他自己把飯吃完了。",
-  "年|ㄋㄧㄢˊ|nián|6|今年|year|祝你新年快樂。_跟|ㄍㄣ|gēn|13|跟著|with / follow|我跟著媽媽去買菜。_比|ㄅㄧˇ|bǐ|4|比較|compare|哥哥比我高。_外|ㄨㄞˋ|wài|5|外面|outside|外面正在下雨。_公|ㄍㄨㄥ|gōng|4|公園|public / grandpa|外公喜歡去公園散步。",
-  "以|ㄧˇ|yǐ|5|以前|before / use|我以前不喜歡吃青菜。_前|ㄑㄧㄢˊ|qián|9|前面|front / before|我的前面是老師。_工|ㄍㄨㄥ|gōng|3|工作|work|爸爸每天努力工作。_作|ㄗㄨㄛˋ|zuò|7|作業|work / do|我寫完今天的作業了。_班|ㄅㄢ|bān|10|上班|class|我們班有二十個學生。",
-  "後|ㄏㄡˋ|hòu|9|後面|back / after|放學後我要去打球。_去|ㄑㄩˋ|qù|5|過去|go|週末我們去公園玩。_近|ㄐㄧㄣˋ|jìn|8|附近|near / close|我家離學校很近。_買|ㄇㄞˇ|mǎi|12|買東西|buy|媽媽去超市買水果。_東|ㄉㄨㄥ|dōng|8|東邊|east|太陽從東邊升起。",
-  "西|ㄒㄧ|xī|6|西邊|west|我去便利商店買東西。_魚|ㄩˊ|yú|11|小魚|fish|貓咪喜歡吃魚。_還|ㄏㄞˊ|hái|17|還有|still / return|我還有一個蘋果。_可|ㄎㄜˇ|kě|5|可以|can / may|這隻小狗很可愛。_出|ㄔㄨ|chū|5|出去|out|太陽出來了。",
-  "先|ㄒㄧㄢ|xiān|6|先生|first / before|請你先洗手再吃飯。_週|ㄓㄡ|zhōu|12|週末|week|週末我們去爬山。_末|ㄇㄛˋ|mò|5|週末|end|週末的晚上很熱鬧。_晚|ㄨㄢˇ|wǎn|11|晚上|late / evening|晚上了，該睡覺了。_蛋|ㄉㄢˋ|dàn|11|雞蛋|egg|早餐我吃了一顆雞蛋。",
-  "飯|ㄈㄢˋ|fàn|13|吃飯|rice / meal|媽媽煮的飯很好吃。_現|ㄒㄧㄢˋ|xiàn|11|現在|now / appear|現在是下午三點。_點|ㄉㄧㄢˇ|diǎn|17|點心|dot / o'clock|下午茶時間到了，來吃點心吧。_黃|ㄏㄨㄤˊ|huáng|12|黃色|yellow|這朵花是黃色的。_綠|ㄌㄩˋ|lǜ|14|綠色|green|春天到了，樹葉變綠了。",
-  "色|ㄙㄜˋ|sè|6|顏色|color|你最喜歡什麼顏色？_時|ㄕˊ|shí|10|時間|time|我有很多空閒的時間。_候|ㄏㄡˋ|hòu|10|時候|time / wait|小時候我很愛哭。_花|ㄏㄨㄚ|huā|8|花朵|flower|花園裡開滿了花。_子|ㄗˇ|zǐ|3|孩子|child / suffix|這個孩子很聰明。",
-  "紅|ㄏㄨㄥˊ|hóng|9|紅色|red|蘋果是紅色的。_白|ㄅㄞˊ|bái|5|白色|white|雲朵是白色的。_華|ㄏㄨㄚˊ|huá|14|華語|Chinese / magnificent|我正在學華語。_說|ㄕㄨㄛ|shuō|14|說話|say / speak|老師對我們說故事。_對|ㄉㄨㄟˋ|duì|14|對錯|correct / to|這一題你答對了。",
-  "星|ㄒㄧㄥ|xīng|9|星星|star|夜空中有許多星星。_期|ㄑㄧ|qī|12|星期|period|今天是星期一。_會|ㄏㄨㄟˋ|huì|13|開會|can / will / meet|我會騎腳踏車。_每|ㄇㄟˇ|měi|7|每天|every|我每天早上喝牛奶。_給|ㄍㄟˇ|gěi|12|給你|give|媽媽給我一顆糖果。",
-  "如|ㄖㄨˊ|rú|6|如果|if / like|如果明天下雨，我們就不去了。_果|ㄍㄨㄛˇ|guǒ|8|水果|fruit / result|我每天都會吃水果。_起|ㄑㄧˇ|qǐng|10|起來|rise / start|早上我七點起床。_累|ㄌㄟˋ|lèi|11|很累|tired|跑完步我覺得很累。_早|ㄗㄠˇ|zǎo|6|早上|early / morning|早上好，吃早餐了嗎？",
-  "洗|ㄒㄧˇ|xǐ|9|洗手|wash|睡覺前要先洗澡。_昨|ㄗㄨㄛˊ|zuó|9|昨天|yesterday|昨天我們去看了電影。_過|ㄍㄨㄛˋ|guò|13|過去|pass / cross|我已經去過那個公園了。_別|ㄅㄧㄝˊ|bié|7|別人|don't / other|請別忘記帶書包。_忘|ㄨㄤˋ|wàng|7|忘記|forget|我忘記帶鉛筆了。",
-  "用|ㄩㄥˋ|yòng|5|用功|use|請用毛巾擦乾臉。_臉|ㄌㄧㄢˇ|liǎn|17|洗臉|face|妹妹的臉紅紅的。_送|ㄙㄨㄥˋ|sòng|10|送給|send / give|我送給朋友一張卡片。_隻|ㄓ|zhī|10|兩隻|measure word|樹上有一隻小鳥。_帶|ㄉㄞˋ|dài|11|帶領|bring / belt|出門記得帶雨傘。",
-  "散|ㄙㄢˋ|sàn|12|散步|scatter / walk|晚飯後我們去散步。_步|ㄅㄨˋ|bù|7|腳步|step / walk|散步對身體很好。_貓|ㄇㄠ|māo|15|小貓|cat|貓咪喜歡睡覺。_非|ㄈㄟ|fēi|8|非常|not / very|這個蛋糕非常好吃。_愛|ㄞˋ|ài|13|可愛|love|我很愛我的家人。",
-  "南|ㄋㄢˊ|nán|9|南邊|south|燕子冬天飛往南方。_北|ㄅㄟˇ|běi|5|北邊|north|台北在台灣的北部。_方|ㄈㄤ|fāng|4|方向|direction / square|這個盒子是方形的。_裡|ㄌㄧˇ|lǐ|13|裡面|inside|書包裡有兩本書。_校|ㄒㄧㄠˋ|xiào|10|學校|school|我們的學校很大。",
-  "門|ㄇㄣˊ|mén|8|開門|door / gate|請記得把門關上。_口|ㄎㄡˇ|kǒu|3|門口|mouth / opening|學校門口有很多樹。_因|ㄧㄣ|yīn|6|因為|because / cause|因為下雨，所以我帶傘。_為|ㄨㄟˋ|wèi|9|因為|for / because|為什麼天會黑？_所|ㄙㄨㄛˇ|suǒ|8|所以|place / so|因為下雨，所以沒出門。",
-  "本|ㄅㄣˇ|běn|5|書本|root|這裡有五本書。_著|ㄓㄜ˙|zhe|12|看著|particle / touch|他正看著窗外。_退|ㄊㄨㄟˋ|tuì|9|退休|retreat / retire|爺爺已經退休了。_休|ㄒㄧㄡ|xiū|6|休息|rest|週末是休息的時間。_次|ㄘˋ|cì|6|每次|time / occurrence|我去過兩次動物園。",
-  "旅|ㄌㄩˇ|lǚ|10|旅行|travel|暑假我們全家去旅行。_行|ㄒㄧㄥˊ|xíng|6|走路|walk / go / bank|馬路上有很多行人。_法|ㄈㄚˇ|fǎ|8|法國|law / method|他想出一個好方法。_國|ㄍㄨㄛˊ|guó|11|國家|country|美國是一個很大的國家。_動|ㄉㄨㄥˋ|dòng|11|動物|move|動物園裡有大象。",
-  "物|ㄨˋ|wù|8|動物|thing / object|貓是一種可愛的動物。_園|ㄩㄢˊ|yuán|13|公園|park / garden|公園裡有很多人。_老|ㄌㄠˇ|lǎo|6|老師|old|李老師教我們寫字。_希|ㄒㄧ|xī|7|希望|hope|我希望明天好天氣。_望|ㄨㄤˋ|wàng|11|希望|hope / look|他望著遠方的山。",
-  "但|ㄉㄢˋ|dàn|7|但是|but|雖然下雨，但是不冷。_胖|ㄆㄤˋ|pàng|9|肥胖|fat|這隻貓長得很胖。_真|ㄓㄣ|zhēn|10|真的|real / true|這個故事真有趣。_長|ㄔㄤˊ|cháng|8|很長|long / grow|斑馬的腿很長。_久|ㄐㄧㄡˇ|jiǔ|3|很久|long time|我等了很久。",
-  "話|ㄏㄨㄚˋ|huà|13|說話|word / speech|老師正在說話。_高|ㄍㄠ|gāo|10|很高|high / tall|這座山非常高。_課|ㄎㄜˋ|kè|15|上課|class / lesson|上課要專心聽講。_寫|ㄒㄧㄝˇ|xiě|15|寫字|write|我在寫功課。_沒|ㄇㄟˊ|méi|7|沒有|not have|我今天沒有帶傘。",
-  "題|ㄊㄧˊ|tí|18|問題|topic / problem|這個問題很簡單。_定|ㄉㄧㄥˋ|dìng|8|一定|decide / certain|努力一定會成功。_意|ㄧˋ|yì|13|意思|meaning / idea|這個字是什麼意思？_思|ㄙ|sī|9|意思|think / thought|我在思考問題。",
+  "你|ㄋㄧˇ|nǐ|7|你好、你們|you|你好嗎？_好|ㄏㄠˇ|hǎo|6|很好、好人|good|今天天氣很好。_我|ㄨㄛˇ|wǒ|7|我們、我的|I / me|我是一個學生。_是|ㄕˋ|shì|9|不是、是的|am / is / are|這是一本書。_他|ㄊㄚ|tā|5|他們、他的|he / him|他是我的好朋友。",
+  "有|ㄧㄡˇ|yǒu|6|沒有、有些|have / has|我有一個蘋果。_幾|ㄐㄧˇ|jǐ|12|幾個、幾天|how many|你有幾個蘋果？_個|ㄍㄜ˙|ge|10|一個、個人|measure word|這是一個人。_人|ㄖㄣˊ|rén|2|好人、別人|person|那裡有很多人。_爸|ㄅㄚˋ|bà|8|爸爸、爸媽|dad|爸爸在工作。",
+  "媽|ㄇㄚ|mā|13|媽媽、爸媽|mom|媽媽在煮飯。_一|ㄧ|yī|1|一個、一起|one|我有一隻狗。_二|ㄦˋ|èr|2|第二、二月|two|今天是星期二。_三|ㄙㄢ|sān|3|三天、三個|three|我有三本書。_四|ㄙˋ|sì|5|四周、四個|four|一年有四季。",
+  "五|ㄨˇ|wǔ|4|五天、五個|five|我買了五顆蘋果。_六|ㄌㄧㄡˋ|liù|4|六天、六月|six|桌上有六支筆。_七|ㄑㄧ|qī|2|七天、七月|seven|一個星期有七天。_八|ㄅㄚ|bā|2|八天、八個|eight|他吃了八顆糖果。_九|ㄐㄧㄡˇ|jiǔ|2|九天、九月|nine|哥哥有九本故事書。",
+  "十|ㄕˊ|shí|2|十天、十分|ten|我的雙手有十根手指。_也|ㄧㄝˇ|yě|3|也是、也許|also / too|我也喜歡吃蘋果。_們|ㄇㄣ˙|men|10|我們、他們|plural suffix|我們一起去玩吧。_男|ㄋㄢˊ|nán|7|男生、男人|male / man|他是一個男生。_女|ㄋㄩˇ|nǚ|3|女生、女人|female / woman|她是一個漂亮的女生。",
+  "生|ㄕㄥ|shēng|5|生日、學生|born / student|今天是我的生日。_來|ㄌㄞˊ|lái|8|過來、來回|come|請你過來這裡。_吃|ㄔ|chī|6|吃飯、小吃|eat|我喜歡吃蘋果。_喝|ㄏㄜ|hē|12|喝水、好喝|drink|口渴要多喝水。_要|ㄧㄠˋ|yào|9|需要、重要|want / need|我要去上學了。",
+  "今|ㄐㄧㄣ|jīn|4|今天、今年|today|今天天氣真不錯。_天|ㄊㄧㄢ|tiān|4|天空、白天|sky / day|天空好藍喔！_很|ㄏㄣˇ|hěn|9|很好、很多|very|這顆蘋果很大。_不|ㄅㄨˋ|bù|4|不要、不是|not / no|我不想去玩。_太|ㄊㄞˋ|tài|4|太陽、太好|too / extremely|今天天氣太熱了。",
+  "了|ㄌㄜ˙|le|2|來了、好了|particle|我已經吃飽了。_喜|ㄒㄧˇ|xǐ|12|喜歡、喜好|like / happy|我最喜歡吃蛋糕。_歡|ㄏㄨㄢ|huān|22|歡樂、喜歡|joyous / happy|大家一起玩真歡樂。_的|ㄉㄜ˙|de|8|我的、好的|possessive particle|這是我的書。_日|ㄖˋ|rì|4|日期、生日|sun / day|祝你生日快樂。",
+  "月|ㄩㄝˋ|yuè|4|月亮、一個月|moon / month|今晚的月亮好圓。_快|ㄎㄨㄞˋ|kuài|7|快樂、趕快|fast / happy|他跑得非常快。_到|ㄉㄠˋ|dào|8|到達、遲到|arrive / to|火車已經到站了。_玩|ㄨㄢˊ|wán|8|好玩、玩具|play|我們一起去公園玩。_什|ㄕㄣˊ|shén|4|什麼、為什麼|what|你在做什麼？",
+  "麼|ㄇㄜ˙|me|14|怎麼、那麼|particle for what|為什麼會這麼痛？_手|ㄕㄡˇ|shǒu|4|洗手、手機|hand|吃飯前要先洗手。_頭|ㄊㄡˊ|tóu|16|頭髮、點頭|head|我的頭好痛喔。_眼|ㄧㄢˇ|yǎn|11|眼睛、眼淚|eye|他的眼睛很大。_看|ㄎㄢˋ|kàn|9|看書、看見|look / see|我喜歡看故事書。",
+  "大|ㄉㄚˋ|dà|3|大小、大家|big|大象是很大的動物。_小|ㄒㄧㄠˇ|xiǎo|3|小孩、大小|small|那是一隻可愛的小狗。_下|ㄒㄧㄚˋ|xià|3|下面、下課|down / below|蘋果掉到樹下了。_常|ㄔㄤˊ|cháng|11|常常、平常|often|我常常去圖書館。_打|ㄉㄚˇ|dǎ|5|打球、打針|hit / play|下課後我們去打球。",
+  "球|ㄑㄧㄡˊ|qiú|11|籃球、地球|ball|哥哥很會打籃球。_做|ㄗㄨㄛˋ|zuò|11|做事、做功課|do / make|我正在做功課。_吧|ㄅㄚ˙|ba|7|好吧、走吧|particle|我們一起回家吧！_在|ㄗㄞˋ|zài|6|現在、正在|at / in / on|媽媽在廚房煮飯。_哪|ㄋㄚˇ|nǎ|10|哪裡、哪個|where / which|請問你要去哪裡？",
+  "上|ㄕㄤˋ|shàng|3|上面、上課|up / above|書在桌子上。_都|ㄉㄡ|dōu|11|都是、都有|all / both|我們都是好朋友。_找|ㄓㄠˇ|zhǎo|7|找到、尋找|find / look for|我在找我的鉛筆。_這|ㄓㄜˋ|zhè|11|這裡、這個|this|這是一塊好吃的蛋糕。_那|ㄋㄚˋ|nà|11|那裡、那個|that|那裡有一棵大樹。",
+  "張|ㄓㄤ|zhāng|11|紙張、一張|sheet|請給我一張圖畫紙。_中|ㄓㄨㄥ|zhōng|4|中間、中午|middle / center|他在操場的正中間。_兩|ㄌㄧㄤˇ|liǎng|8|兩個、兩天|two / both|我有兩顆糖果。_右|ㄧㄡˋ|yòu|5|右邊、右手|right side|我的右邊是妹妹。_怎|ㄗㄣˇ|zěn|9|怎麼、怎樣|how|這題數學怎麼算？",
+  "想|ㄒㄧㄤˇ|xiǎng|13|想要、想念|want to / think|我想要喝果汁。_開|ㄎㄞ|kāi|12|開門、開始|open / start|請幫我開門。_走|ㄗㄡˇ|zǒu|7|走路、走開|walk / go|我們走路去學校。_路|ㄌㄨˋ|lù|13|馬路、走路|road / path|過馬路要小心。_坐|ㄗㄨㄛˋ|zuò|7|坐下、坐車|sit|請大家坐好。",
+  "請|ㄑㄧㄥˇ|qǐng|15|請問、請假|please|請你幫我一個忙。_問|ㄨㄣˋ|wèn|11|問題、學問|ask|我有問題想問老師。_朋|ㄆㄥˊ|péng|8|朋友、親朋好友|friend|我認識了新朋友。_友|ㄧㄡˇ|yǒu|4|朋友、好友|friend|他是我的好朋友。_機|ㄐㄧ|jī|16|飛機、機器|machine|天上有飛機飛過。_再|ㄗㄞˋ|zài|6|再見、再來|again|放學了，大家再見！",
+  "新|ㄒㄧㄣ|xīn|13|新年、全新|new|這是一本新書。_同|ㄊㄨㄥˊ|tóng|6|同學、相同|same / together|我們是同班同學。_學|ㄒㄩㄝˊ|xué|16|學校、學習|learn / study|我在學校學習。_自|ㄗˋ|zì|6|自己、自由|self|我自己走路去學校。_己|ㄐㄧˇ|jǐ|3|自己、知己|self|他自己把飯吃完了。",
+  "年|ㄋㄧㄢˊ|nián|6|今年、明年|year|祝你新年快樂。_跟|ㄍㄣ|gēn|13|跟著、跟隨|with / follow|我跟著媽媽去買菜。_比|ㄅㄧˇ|bǐ|4|比較、比賽|compare|哥哥比我高。_外|ㄨㄞˋ|wài|5|外面、國外|outside|外面正在下雨。_公|ㄍㄨㄥ|gōng|4|公園、外公|public / grandpa|外公喜歡去公園散步。",
+  "以|ㄧˇ|yǐ|5|以前、以後|before / use|我以前不喜歡吃青菜。_前|ㄑㄧㄢˊ|qián|9|前面、以前|front / before|我的前面是老師。_工|ㄍㄨㄥ|gōng|3|工作、工人|work|爸爸每天努力工作。_作|ㄗㄨㄛˋ|zuò|7|作業、工作|work / do|我寫完今天的作業了。_班|ㄅㄢ|bān|10|上班、班級|class|我們班有二十個學生。",
+  "後|ㄏㄡˋ|hòu|9|後面、以後|back / after|放學後我要去打球。_去|ㄑㄩˋ|qù|5|過去、出去|go|週末我們去公園玩。_近|ㄐㄧㄣˋ|jìn|8|附近、接近|near / close|我家離學校很近。_買|ㄇㄞˇ|mǎi|12|買東西、買菜|buy|媽媽去超市買水果。_東|ㄉㄨㄥ|dōng|8|東邊、東西|east|太陽從東邊升起。",
+  "西|ㄒㄧ|xī|6|西邊、東西|west|我去便利商店買東西。_魚|ㄩˊ|yú|11|小魚、金魚|fish|貓咪喜歡吃魚。_還|ㄏㄞˊ|hái|17|還有、還是|still / return|我還有一個蘋果。_可|ㄎㄜˇ|kě|5|可以、可愛|can / may|這隻小狗很可愛。_出|ㄔㄨ|chū|5|出去、出現|out|太陽出來了。",
+  "先|ㄒㄧㄢ|xiān|6|先生、首先|first / before|請你先洗手再吃飯。_週|ㄓㄡ|zhōu|12|週末、一週|week|週末我們去爬山。_末|ㄇㄛˋ|mò|5|週末、期末|end|週末的晚上很熱鬧。_晚|ㄨㄢˇ|wǎn|11|晚上、夜晚|late / evening|晚上了，該睡覺了。_蛋|ㄉㄢˋ|dàn|11|雞蛋、蛋糕|egg|早餐我吃了一顆雞蛋。",
+  "飯|ㄈㄢˋ|fàn|13|吃飯、白飯|rice / meal|媽媽煮的飯很好吃。_現|ㄒㄧㄢˋ|xiàn|11|現在、發現|now / appear|現在是下午三點。_點|ㄉㄧㄢˇ|diǎn|17|點心、幾點|dot / o'clock|下午茶時間到了，來吃點心吧。_黃|ㄏㄨㄤˊ|huáng|12|黃色、蛋黃|yellow|這朵花是黃色的。_綠|ㄌㄩˋ|lǜ|14|綠色、綠葉|green|春天到了，樹葉變綠了。",
+  "色|ㄙㄜˋ|sè|6|顏色、色彩|color|你最喜歡什麼顏色？_時|ㄕˊ|shí|10|時間、小時|time|我有很多空閒的時間。_候|ㄏㄡˋ|hòu|10|時候、等候|time / wait|小時候我很愛哭。_花|ㄏㄨㄚ|huā|8|花朵、開花|flower|花園裡開滿了花。_子|ㄗˇ|zǐ|3|孩子、果子|child / suffix|這個孩子很聰明。",
+  "紅|ㄏㄨㄥˊ|hóng|9|紅色、口紅|red|蘋果是紅色的。_白|ㄅㄞˊ|bái|5|白色、白天|white|雲朵是白色的。_華|ㄏㄨㄚˊ|huá|14|華語、中華|Chinese / magnificent|我正在學華語。_說|ㄕㄨㄛ|shuō|14|說話、說明|say / speak|老師對我們說故事。_對|ㄉㄨㄟˋ|duì|14|對錯、不對|correct / to|這一題你答對了。",
+  "星|ㄒㄧㄥ|xīng|9|星星、星期|star|夜空中有許多星星。_期|ㄑㄧ|qī|12|星期、日期|period|今天是星期一。_會|ㄏㄨㄟˋ|huì|13|開會、學會|can / will / meet|我會騎腳踏車。_每|ㄇㄟˇ|měi|7|每天、每個|every|我每天早上喝牛奶。_給|ㄍㄟˇ|gěi|12|給你、交給|give|媽媽給我一顆糖果。",
+  "如|ㄖㄨˊ|rú|6|如果、比如|if / like|如果明天下雨，我們就不去了。_果|ㄍㄨㄛˇ|guǒ|8|水果、如果|fruit / result|我每天都會吃水果。_起|ㄑㄧˇ|qǐng|10|起來、起床|rise / start|早上我七點起床。_累|ㄌㄟˋ|lèi|11|很累、勞累|tired|跑完步我覺得很累。_早|ㄗㄠˇ|zǎo|6|早上、早安|early / morning|早上好，吃早餐了嗎？",
+  "洗|ㄒㄧˇ|xǐ|9|洗手、洗澡|wash|睡覺前要先洗澡。_昨|ㄗㄨㄛˊ|zuó|9|昨天、昨晚|yesterday|昨天我們去看了電影。_過|ㄍㄨㄛˋ|guò|13|過去、經過|pass / cross|我已經去過那個公園了。_別|ㄅㄧㄝˊ|bié|7|別人、特別|don't / other|請別忘記帶書包。_忘|ㄨㄤˋ|wàng|7|忘記、難忘|forget|我忘記帶鉛筆了。",
+  "用|ㄩㄥˋ|yòng|5|用功、有用|use|請用毛巾擦乾臉。_臉|ㄌㄧㄢˇ|liǎn|17|洗臉、笑臉|face|妹妹的臉紅紅的。_送|ㄙㄨㄥˋ|sòng|10|送給、送人|send / give|我送給朋友一張卡片。_隻|ㄓ|zhī|10|兩隻、一隻|measure word|樹上有一隻小鳥。_帶|ㄉㄞˋ|dài|11|帶領、帶路|bring / belt|出門記得帶雨傘。",
+  "散|ㄙㄢˋ|sàn|12|散步、散心|scatter / walk|晚飯後我們去散步。_步|ㄅㄨˋ|bù|7|腳步、跑步|step / walk|散步對身體很好。_貓|ㄇㄠ|māo|15|小貓、貓咪|cat|貓咪喜歡睡覺。_非|ㄈㄟ|fēi|8|非常、是非|not / very|這個蛋糕非常好吃。_愛|ㄞˋ|ài|13|可愛、愛心|love|我很愛我的家人。",
+  "南|ㄋㄢˊ|nán|9|南邊、南方|south|燕子冬天飛往南方。_北|ㄅㄟˇ|běi|5|北邊、北方|north|台北在台灣的北部。_方|ㄈㄤ|fāng|4|方向、地方|direction / square|這個盒子是方形的。_裡|ㄌㄧˇ|lǐ|13|裡面、家裡|inside|書包裡有兩本書。_校|ㄒㄧㄠˋ|xiào|10|學校、校園|school|我們的學校很大。",
+  "門|ㄇㄣˊ|mén|8|開門、門口|door / gate|請記得把門關上。_口|ㄎㄡˇ|kǒu|3|門口、口袋|mouth / opening|學校門口有很多樹。_因|ㄧㄣ|yīn|6|因為、原因|because / cause|因為下雨，所以我帶傘。_為|ㄨㄟˋ|wèi|9|因為、為何|for / because|為什麼天會黑？_所|ㄙㄨㄛˇ|suǒ|8|所以、所有|place / so|因為下雨，所以沒出門。",
+  "本|ㄅㄣˇ|běn|5|書本、一本|root|這裡有五本書。_著|ㄓㄜ˙|zhe|12|看著、睡著|particle / touch|他正看著窗外。_退|ㄊㄨㄟˋ|tuì|9|退休、退步|retreat / retire|爺爺已經退休了。_休|ㄒㄧㄡ|xiū|6|休息、休假|rest|週末是休息的時間。_次|ㄘˋ|cì|6|每次、一次|time / occurrence|我去過兩次動物園。",
+  "旅|ㄌㄩˇ|lǚ|10|旅行、旅遊|travel|暑假我們全家去旅行。_行|ㄒㄧㄥˊ|xíng|6|走路、行動|walk / go / bank|馬路上有很多行人。_法|ㄈㄚˇ|fǎ|8|法國、方法|law / method|他想出一個好方法。_國|ㄍㄨㄛˊ|guó|11|國家、國外|country|美國是一個很大的國家。_動|ㄉㄨㄥˋ|dòng|11|動物、運動|move|動物園裡有大象。",
+  "物|ㄨˋ|wù|8|動物、禮物|thing / object|貓是一種可愛的動物。_園|ㄩㄢˊ|yuán|13|公園、校園|park / garden|公園裡有很多人。_老|ㄌㄠˇ|lǎo|6|老師、老人|old|李老師教我們寫字。_希|ㄒㄧ|xī|7|希望、希臘|hope|我希望明天好天氣。_望|ㄨㄤˋ|wàng|11|希望、看望|hope / look|他望著遠方的山。",
+  "但|ㄉㄢˋ|dàn|7|但是、不但|but|雖然下雨，但是不冷。_胖|ㄆㄤˋ|pàng|9|肥胖、胖子|fat|這隻貓長得很胖。_真|ㄓㄣ|zhēn|10|真的、認真|real / true|這個故事真有趣。_長|ㄔㄤˊ|cháng|8|很長、長大|long / grow|斑馬的腿很長。_久|ㄐㄧㄡˇ|jiǔ|3|很久、不久|long time|我等了很久。",
+  "話|ㄏㄨㄚˋ|huà|13|說話、笑話|word / speech|老師正在說話。_高|ㄍㄠ|gāo|10|很高、高興|high / tall|這座山非常高。_課|ㄎㄜˋ|kè|15|上課、下課|class / lesson|上課要專心聽講。_寫|ㄒㄧㄝˇ|xiě|15|寫字、聽寫|write|我在寫功課。_沒|ㄇㄟˊ|méi|7|沒有、沒事|not have|我今天沒有帶傘。",
+  "題|ㄊㄧˊ|tí|18|問題、題目|topic / problem|這個問題很簡單。_定|ㄉㄧㄥˋ|dìng|8|一定、決定|decide / certain|努力一定會成功。_意|ㄧˋ|yì|13|意思、意外|meaning / idea|這個字是什麼意思？_思|ㄙ|sī|9|意思、思考|think / thought|我在思考問題。",
   "回|ㄏㄨㄟˊ|huí|6|回家、回來|return / go back|我要回家了。_放|ㄈㄤˋ|fàng|8|放假、放下|put / let go|明天開始放假。_假|ㄐㄧㄚˋ|jià|11|放假、真假|vacation / fake|我們下週放假。_午|ㄨˇ|wǔ|4|中午、下午|noon|我中午吃麵。_練|ㄌㄧㄢˋ|liàn|15|練習、教練|practice|我每天練習寫字。",
   "習|ㄒㄧˊ|xí|11|練習、學習|learn / practice|我們要好好學習。_字|ㄗˋ|zì|6|寫字、生字|character / word|這個字怎麼念？_始|ㄕˇ|shǐ|8|開始、始終|begin / start|比賽開始了。_嗎|ㄇㄚ˙|ma|13|好嗎、是嗎|question particle|你吃飽了嗎？_等|ㄉㄥˇ|děng|12|等一下、等待|wait|請等我一下。",
   "念|ㄋㄧㄢˋ|niàn|8|念書、想念|read / miss|老師念故事給我們聽。_樣|ㄧㄤˋ|yàng|15|一樣、樣子|appearance / same|我們穿一樣的衣服。_心|ㄒㄧㄣ|xīn|4|開心、小心|heart / mind|過馬路要小心。_跑|ㄆㄠˇ|pǎo|12|跑步、賽跑|run|他在操場上跑步。_得|ㄉㄜ˙|de|11|跑得快、得到|particle / get|他跑得非常快。",
@@ -1044,10 +1044,16 @@ export default function App() {
                 </div>
                 <div className="w-[50%] shrink-0 min-w-0 overflow-hidden border-[3px] rounded-2xl relative flex flex-col items-center justify-center z-10 -ml-[2px] p-1.5 sm:p-2 text-center bg-white" style={{borderColor: cardBorder}}>
                     <span className={`${dictKey.length >= 3 ? 'text-2xl print:text-[24px]' : 'text-3xl print:text-[32px]'} font-black text-black mb-1 whitespace-nowrap`}>{dictKey}</span>
-                    <div className="flex flex-col items-center gap-0.5 w-full">
-                      <span className="text-[11px] sm:text-[15px] text-gray-800 font-bold whitespace-nowrap">注音: <span className="outline-none hover:bg-gray-100 px-1 rounded cursor-text" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'zhuyin', e.currentTarget.textContent)}>{info.zhuyin}</span></span>
-                      <span className="text-[11px] sm:text-[15px] text-gray-800 font-bold whitespace-nowrap">拼音: <span className="outline-none hover:bg-gray-100 px-1 rounded cursor-text" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'pinyin', e.currentTarget.textContent)}>{info.pinyin}</span></span>
-                      <span className="text-[11px] sm:text-[13px] text-gray-800 font-bold whitespace-nowrap overflow-hidden text-ellipsis max-w-[95%]">英文: <span className="outline-none hover:bg-gray-100 px-1 rounded cursor-text" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'english', e.currentTarget.textContent)}>{info.english}</span></span>
+                    <div className="flex flex-col items-center gap-1 w-full text-center">
+                      <div className="w-full text-[11px] sm:text-[14px] print:text-[13px] text-gray-800 font-bold whitespace-normal break-words leading-tight px-0.5">
+                        注音: <span className="outline-none hover:bg-gray-100 rounded cursor-text inline px-1" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'zhuyin', e.currentTarget.textContent)}>{info.zhuyin}</span>
+                      </div>
+                      <div className="w-full text-[11px] sm:text-[14px] print:text-[13px] text-gray-800 font-bold whitespace-normal break-words leading-tight px-0.5">
+                        拼音: <span className="outline-none hover:bg-gray-100 rounded cursor-text inline px-1" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'pinyin', e.currentTarget.textContent)}>{info.pinyin}</span>
+                      </div>
+                      <div className="w-full text-[11px] sm:text-[13px] print:text-[12px] text-gray-800 font-bold whitespace-normal break-words leading-tight px-0.5">
+                        英文: <span className="outline-none hover:bg-gray-100 rounded cursor-text inline px-1" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'english', e.currentTarget.textContent)}>{info.english}</span>
+                      </div>
                     </div>
                 </div>
                 <div className="absolute top-0 bottom-0 left-1/2 border-l-[3px] border-dashed z-20 -ml-[1px]" style={{borderColor: cardBorder}}></div>
