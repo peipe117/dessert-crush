@@ -585,6 +585,24 @@ export default function App() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // 停用滑鼠右鍵選單
+  useEffect(() => {
+    const handleContextMenu = (e) => {
+      // 允許在「輸入框 (input)」、「文字區域 (textarea)」和「可編輯元素 (contenteditable)」使用右鍵，以便複製貼上
+      const target = e.target;
+      if (
+        target.tagName === 'INPUT' || 
+        target.tagName === 'TEXTAREA' || 
+        target.isContentEditable
+      ) {
+        return;
+      }
+      e.preventDefault();
+    };
+    document.addEventListener('contextmenu', handleContextMenu);
+    return () => document.removeEventListener('contextmenu', handleContextMenu);
+  }, []);
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
         if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch((e) => console.log(e));
