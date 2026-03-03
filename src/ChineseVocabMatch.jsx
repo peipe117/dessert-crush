@@ -392,10 +392,22 @@ const speakText = (text, enabled) => {
   const utterance = new SpeechSynthesisUtterance(String(spoken));
   utterance.lang = 'zh-TW';
   
-  // 確保在非中文 OS 中優先選用繁體中文語音 (或是任何可用的中文語音)
+  // 確保優先選用繁體中文語音，避免在 iOS 設備上誤抓到廣東話 (zh-HK)
   const voices = window.speechSynthesis.getVoices();
   if (voices.length > 0) {
-    const zhVoice = voices.find(v => v.lang === 'zh-TW' || v.lang === 'zh-HK') || voices.find(v => v.lang.includes('zh'));
+    // 1. 絕對優先尋找台灣國語 (zh-TW)
+    let zhVoice = voices.find(v => v.lang === 'zh-TW' || v.lang === 'zh_TW' || v.lang === 'zh-tw');
+    
+    // 2. 退而求其次尋找普通話 (zh-CN)
+    if (!zhVoice) {
+        zhVoice = voices.find(v => v.lang === 'zh-CN' || v.lang === 'zh_CN' || v.lang === 'zh-cn');
+    }
+    
+    // 3. 如果還是沒有，尋找任何 zh 且「不是」香港 (HK) 廣東話的語音
+    if (!zhVoice) {
+        zhVoice = voices.find(v => v.lang.toLowerCase().includes('zh') && !v.lang.toLowerCase().includes('hk'));
+    }
+
     if (zhVoice) {
         utterance.voice = zhVoice;
     }
