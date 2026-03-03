@@ -538,7 +538,15 @@ export default function App() {
       return 0;
   }); 
 
-  const [highScore, setHighScore] = useState(() => (typeof window !== 'undefined' ? Number(localStorage.getItem('wordcrush_highscore')) || 0 : 0));
+  const [highScore, setHighScore] = useState(0);
+
+  useEffect(() => {
+      if (typeof window !== 'undefined') {
+          // 讓最高分跟著目前的課堂獨立讀取
+          const savedHs = Number(localStorage.getItem(`wordcrush_highscore_${currentLesson}`)) || 0;
+          setHighScore(savedHs);
+      }
+  }, [currentLesson]);
 
   useEffect(() => {
       if (typeof window !== 'undefined') {
@@ -860,7 +868,11 @@ export default function App() {
       const addedScore = matches.length * 10 * currentCombo;
       setScore(prev => {
           const newScore = prev + addedScore;
-          setHighScore(hs => { const newHs = Math.max(hs, newScore); if (typeof window !== 'undefined') localStorage.setItem('wordcrush_highscore', newHs); return newHs; });
+          setHighScore(hs => { 
+              const newHs = Math.max(hs, newScore); 
+              if (typeof window !== 'undefined') localStorage.setItem(`wordcrush_highscore_${currentLesson}`, newHs); 
+              return newHs; 
+          });
           return newScore;
       });
       setBoard([...tempBoard]); await new Promise(r => setTimeout(r, 100));
@@ -989,10 +1001,19 @@ export default function App() {
     let startLsn = currentLesson;
     if (isFirebaseReady && db && currentUser) {
       try {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', currentUser.uid);
+        // 將雲端 ID 綁定課堂，讓同一個玩家可以在不同課都保有最高分
+        const docId = `${currentUser.uid}_${startLsn}`;
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', docId);
         const docSnap = await getDoc(docRef);
-        let currentHighScore = highScore;
-        if (docSnap.exists()) { let dbHs = Number(docSnap.data().score) || 0; if (dbHs > currentHighScore) { currentHighScore = dbHs; setHighScore(currentHighScore); if (typeof window !== 'undefined') localStorage.setItem('wordcrush_highscore', currentHighScore); } }
+        let currentHighScore = Number(localStorage.getItem(`wordcrush_highscore_${startLsn}`)) || 0;
+        if (docSnap.exists()) { 
+            let dbHs = Number(docSnap.data().score) || 0; 
+            if (dbHs > currentHighScore) { 
+                currentHighScore = dbHs; 
+                setHighScore(currentHighScore); 
+                if (typeof window !== 'undefined') localStorage.setItem(`wordcrush_highscore_${startLsn}`, currentHighScore); 
+            } 
+        }
         await setDoc(docRef, { name: finalName, score: currentHighScore, lesson: startLsn, lastSeen: serverTimestamp(), uid: currentUser.uid }, { merge: true });
       } catch (err) { console.error(err); }
     }
@@ -1040,8 +1061,29 @@ export default function App() {
     if (!isFirebaseReady || !db) return;
     const qL = collection(db, 'artifacts', appId, 'public', 'data', 'players');
     const unsubscribe = onSnapshot(qL, (s) => {
-      let players = s.docs.map(d => ({ ...d.data(), id: d.id })).filter(u => Number(u.score) > 0);
-      players.sort((a, b) => Number(b.score) - Number(a.score)); setLeaderboard(players.slice(0, 100));
+      let rawPlayers = s.docs.map(d => ({ ...d.data(), id: d.id })).filter(u => Number(u.score) > 0);
+      
+      // 【核心邏輯】排行榜去重：同一個名字在同一課，只保留最高分的那一次！
+      const bestScores = {};
+      rawPlayers.forEach(p => {
+         if (!p.name || !p.lesson) return;
+         const key = `${p.name}_${p.lesson}`;
+         // 如果這個組合還沒記錄過，或是分數更高，就更新它
+         if (!bestScores[key] || Number(p.score) > Number(bestScores[key].score)) {
+             bestScores[key] = p;
+         } else if (Number(p.score) === Number(bestScores[key].score)) {
+             // 如果分數一樣，保留上線時間較近的紀錄，讓「在線」狀態更準確
+             const currentLastSeen = bestScores[key].lastSeen?.toMillis?.() || 0;
+             const newLastSeen = p.lastSeen?.toMillis?.() || 0;
+             if (newLastSeen > currentLastSeen) {
+                 bestScores[key] = p;
+             }
+         }
+      });
+
+      let players = Object.values(bestScores);
+      players.sort((a, b) => Number(b.score) - Number(a.score)); 
+      setLeaderboard(players.slice(0, 100));
     }, (error) => console.error("讀取排行榜失敗:", error));
     return () => unsubscribe();
   }, [isFirebaseReady]);
@@ -1049,16 +1091,22 @@ export default function App() {
   useEffect(() => {
     if (!isFirebaseReady || !currentUser || !playerName || !db) return; 
     const heartbeat = setInterval(async () => {
-      try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', currentUser.uid), { lastSeen: serverTimestamp(), uid: currentUser.uid }, { merge: true }); } 
+      try { 
+          const docId = `${currentUser.uid}_${currentLesson}`;
+          await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', docId), { lastSeen: serverTimestamp(), uid: currentUser.uid }, { merge: true }); 
+      } 
       catch (e) { console.error("Heartbeat failed", e); }
     }, 60000); 
     return () => clearInterval(heartbeat);
-  }, [isFirebaseReady, currentUser, playerName]);
+  }, [isFirebaseReady, currentUser, playerName, currentLesson]);
 
   useEffect(() => {
     if (isFirebaseReady && db && currentUser && highScore > 0 && playerName) {
       const saveToFirebase = async () => {
-        try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', currentUser.uid), { name: playerName, score: highScore, lesson: currentLesson, lastSeen: serverTimestamp(), uid: currentUser.uid }, { merge: true }); } 
+        try { 
+            const docId = `${currentUser.uid}_${currentLesson}`;
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', docId), { name: playerName, score: highScore, lesson: currentLesson, lastSeen: serverTimestamp(), uid: currentUser.uid }, { merge: true }); 
+        } 
         catch (e) { console.error("Auto save failed:", e); }
       };
       saveToFirebase();
