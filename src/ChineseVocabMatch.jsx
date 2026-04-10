@@ -1255,7 +1255,7 @@ export default function App() {
                   <button type="submit" className="w-full bg-pink-500 text-white font-black py-4 rounded-2xl text-xl active:translate-y-1 mt-4">{t.unlockBtn}</button>
                 </form>
               </div>
-              <div className="mt-8 text-center text-pink-300 font-bold text-sm tracking-widest uppercase z-10">Design by Sophia Wong</div>
+              <div className="mt-8 text-center text-pink-300 font-bold text-sm tracking-widest uppercase z-10">Created by Sophia Wong</div>
             </div>
         ) : gameState === 'welcome' ? (
             <div className="w-full flex-1 flex flex-col items-center justify-center p-4 text-center relative z-10">
@@ -1341,7 +1341,7 @@ export default function App() {
                   <HelpCircle size={16} /> {t.howToPlay}
                 </button>
               </div>
-              <div className="mt-8 text-center text-pink-300 font-bold text-sm tracking-widest uppercase z-10">Design by Sophia Wong</div>
+              <div className="mt-8 text-center text-pink-300 font-bold text-sm tracking-widest uppercase z-10">Created by Sophia Wong</div>
             </div>
         ) : (
             <div className="w-full max-w-[600px] flex-1 flex flex-col items-center relative pt-4 md:pt-6 px-4 mx-auto z-10">
