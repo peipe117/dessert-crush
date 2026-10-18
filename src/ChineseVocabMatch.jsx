@@ -1,3 +1,4 @@
+// ==================== 【第 1 段開始】 ====================
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { 
   Sparkles, RefreshCw, Trophy, BookOpen, Lightbulb, Share2, 
@@ -219,14 +220,46 @@ const RAW_DICT_CHUNKS = [
   "蘋果|ㄆㄧㄥˊ ㄍㄨㄛˇ|píng guǒ|-|蘋果|apple|這是一顆紅蘋果。_梨子|ㄌㄧˊ ㄗ˙|lí zi|-|梨子|pear|這是一顆梨子。_橘子|ㄐㄩˊ ㄗ˙|jú zi|-|橘子|orange|這是一顆橘子。_檸檬|ㄋㄧㄥˊ ㄇㄥˊ|níng méng|-|檸檬|lemon|檸檬很酸。_香蕉|ㄒㄧㄤ ㄐㄧㄠ|xiāng jiāo|-|香蕉|banana|猴子愛吃香蕉。_西瓜|ㄒㄧ ㄍㄨㄚ|xī guā|-|西瓜|watermelon|夏天吃西瓜很涼快。_葡萄|ㄆㄨˊ ㄊㄠˊ|pú táo|-|葡萄|grape|這是一串葡萄。_草莓|ㄘㄠˇ ㄇㄟˊ|cǎo méi|-|草莓|strawberry|這是一顆草莓。_哈密瓜|ㄏㄚ ㄇㄧˋ ㄍㄨㄚ|hā mì guā|-|哈密瓜|melon|哈密瓜很甜。_櫻桃|ㄧㄥ ㄊㄠˊ|yīng táo|-|櫻桃|cherry|這是一顆櫻桃。_桃子|ㄊㄠˊ ㄗ˙|táo zi|-|桃子|peach|這是一顆桃子。_芒果|ㄇㄤˊ ㄍㄨㄛˇ|máng guǒ|-|芒果|mango|這是一顆芒果。_鳳梨|ㄈㄥˋ ㄌㄧˊ|fèng lí|-|鳳梨|pineapple|這是一顆鳳梨。_椰子|ㄧㄝˊ ㄗ˙|yé zi|-|椰子|coconut|這是一顆椰子。_奇異果|ㄑㄧˊ ㄧˋ ㄍㄨㄛˇ|qí yì guǒ|-|奇異果|kiwi|這是一顆奇異果。"
 ];
 
-const DICTIONARY = {};
-RAW_DICT_CHUNKS.forEach(chunk => {
-  chunk.split('_').forEach(item => {
-    const [ch, z, p, s, w, e, c] = item.split('|');
-    if (ch) DICTIONARY[ch] = { zhuyin: z, pinyin: p, strokes: s, words: w, english: e, sentence: c };
+// 完整生字部首對照表（涵蓋第 1~10 冊與生肖）
+const RADICAL_DATA = [
+  "你人|好女|我戈|是日|他人|有肉|幾幺|個人|人人|爸父|媽女|一一|二二|三一|四囗|五二|也乙|們人|男田|女女|生生|六八|七一|八八|九乙|十十|來人|吃口|喝口|要襾|今人|天大|很彳|不一|太大|了亅|喜口|歡欠|的白|日日|月月|快心|到刀|玩玉|什人|麼麻|手手|頭頁|眼目|看目|大大|小小|下一|常巾|打手|球玉|做人|吧口|在土|哪口|上一|都邑|找手|這辵|那邑|張弓|中丨|兩入|右口|怎心|想心|開門|走走|路足|坐土|請言|問門|朋月|友又|機木|再冂",
+  "新斤|同口|學子|自自|己己|年干|跟足|比比|外夕|公八|以人|前刀|工工|作人|班玉|後彳|去厶|近辵|買貝|東木|西襾|魚魚|還辵|可口|出凵|先儿|週辵|末木|晚日|蛋虫|飯食|現玉|點黑|黃黃|綠糸|色色|時日|候人|花艸|子子|紅糸|白白|華艸|說言|對寸|星日|期月|會曰|每毋|給糸|如女|果木|起走|累糸|早日|洗水|昨日|過辵|別刀|忘心|用用|臉肉|送辵|隻隹|狗犬|帶巾|散攴|步止|貓豸|非非|愛心|南十|北匕|方方|裡衣|校木|門門|口口|因囗|為爪|所戶|本木|住人|著艸|退辵|休人|次欠|旅方|行行|法水|國囗|動力|物牛|園囗|老老|希巾|望月|但人|胖肉|真目|長長|久丿|話言|高高|課言|寫宀|沒水|題頁|定宀|意心|思心",
+  "回囗|放攴|假人|午十|練糸|習羽|字子|始女|嗎口|等竹|念心|樣木|心心|跑足|得彳|最曰|餓食|功力|叫口|讀言|書曰|筆竹|貴貝|又又|便人|宜宀|共八|多夕|少小|錢金|枝木|準水|備人|些二|汽水|水水|樂木|能肉|和口|奶女|茶艸|涼水|溫水|度广|差工|穿穴|衣衣|服月|感心|冒冂|雨雨|平干|就尤|棵木|彩彡|掛手|窗穴|聽耳|卡卜|片片|寄宀|像人|病疒|覺見|痛疒|息心|肚肉|吐口|陪阜|接手|醫酉|教攴|室宀|總糸|敢攴|才手|跳足|誰言|決水|剪刀|刀刀|搬手|家宀|離隹|號虍|附阜|旁方|邊辵|房戶|鳥鳥|舊臼|拜手|文文|化匕|毛毛|炒火|筷竹|除阜|厲厂|害宀|辦辛|遊辵|木木|馬馬|碰石|車車|趣走|怕心|飛飛|更曰|緊糸|特牛|選辵|氣气|句口|祝示|畫田|圖囗|收攴|應心|該言",
+  "分刀|鐘金|渴水|幫巾|忙心|把手|紙糸|拿手|完宀|包勹|熱火|鬧鬥|約糸|讓言|答竹|表衣|妹女|參厶|加力|熟火|考老|試言|較車|半十|從彳|鋼金|概木|網糸|必心|須頁|湯水|辣辛|糖米|肉肉|味口|道辵|酸酉|甜甘|越走|苦艸|冷冫|面面|變言|低人|而而|且一|厚厂|夠夕|風風|春日|街行|舞舛|條木|全入|夜夕|火火|另口|存子|歲止|師巾|禮示|流水|血血|哭口|腳肉|扭手|只口|慢心|地土|電雨|影彡|種禾|傳人|統糸|難隹|處虍|身身|演水|空穴|各口|城土|市巾|英艸|美羊|部邑|清水|楚木|雪雨|記言|世一|界田|其八|彎弓|圈囗|懂心|德彳|拼手|古口|千十|餐食|明日|草艸|館食|討言|論言|父父|母毋|通辵|知矢|親見|節竹|事亅|廣广|告口|掃手|錯金|百白|貨貝|司口",
+  "直目|經糸|已己|級糸|興臼|增土|議言|建廴|於方|終糸|亮亠|圓囗|團囗|陽阜|查木|秋禾|故攴|餅食|重里|代人|輛車|修人|壞土|架木|丟一|具八|廳广|客宀|理玉|整攴|廚广|正止|材木|料斗|麵麥|粉米|油水|聞耳|香香|烤火|破石|摔手|煙火|迎辵|數攴|報土|酒酉|運辵|音音|聲耳|院阜|拉手|護言|士士|體骨|瓜瓜|食食|注水|淡水|賽貝|合口|隊阜|惜心|名口|第竹|當田|連辵|力力|努力|周口|間門|成戈|左工|積禾|置网|位人|或戈|麗鹿|場土|山山|搭手|遠辵|算竹|爺父|迷辵|速辵|往彳|轉車|輕車|樹木|票示|底广|活水|發癶|保人|響音|然火|雖隹",
+  "招手|式弋|拋手|簡竹|單口|藝艸|結糸|線糸|編糸|謝言|詩言|歌欠|朗月|誦言|組糸|靜青|背肉|首首|李木|關門|介人|紹糸|肖肉|份人|極木|牛牛|虎虍|兔儿|羊羊|雞隹|信人|箱竹|戴戈|帽巾|短矢|褲衣|夏夊|相目|反又|冬冫|杯木|碗石|安宀|夕夕|睡目|倒人|罵网|管竹|被衣|盤皿|菜艸|厭厂|腿肉|類頁|豆豆|腐肉|健人|康广|助力|您心|舉臼|唱口|茉艸|莉艸|束木|語言|奇大|順頁|敬攴|原厂|尺尸|景日|島山|主丶|括手|政攴|治水|濟水|交亠|鮮魚|餵食|青青|擠手|野里|欣欠|賞貝|騎馬|黑黑|蟲虫|指手|竹竹|產生|價人|普日|遍辵|使人|腦肉|它宀|般舟",
+  "歷止|史口|解角|尤尤|吸口|引弓|專寸|術行|需雨|插手|鈴金|米米|段殳|係人|航舟|派水|利刀|慕心|羨羊|薯艸|適辵|仔人|鞋革|雙隹|折手|倍人|付人|刷刀|帳巾|划刀|豬豕|蝦虫|仁人|餃食|皮皮|捏手|汁水|扁戶|餡食|扮手|蹈足|曾曰|目目|遇辵|剛刀|業木|畢田|顏頁|裝衣|桶木|圾土|垃土|飽食|費貝|浪水|良艮|足足|即卩|死歹|曲曰|彈弓|典八|情心|受又|呼口|鬆髟|享亠|聊耳|無火|講言|由田|立立|民氏|金金|元儿|鈔金|貢貝|持手|支支|許言|深水|象豕|印卩|童立|兒儿|待彳|燈火|驗馬|此止|科禾|件人|絡糸|聯耳|靠非|漸水|實宀|透辵|型土",
+  "志心|際阜|省目|環玉|姊女|換手|夢夕|社示|義羊|蓋艸|慣心|弄廾|移禾|巧工|冠冖|嗨口|隨阜|擔手|堡土|漢水|佔人|溝水|商口|示示|況水|詞言|達辵|易日|容宀|石石|造辵|災火|颱風|震雨|搖手|壓土|升十|淹水|田田|陸阜|龍龍|紀糸|菇艸|鹹鹵|粽米|端立|並一|軍車|船舟|肩肉|撞手|傷人|暖日|膝肉|怪心|肌肉|痠疒|臂肉|膀肉|識言|刺刀|怖心|恐心|頻頁|根木|趁走|劇刀|續糸|擇手|技手|及又|按手|細糸|詳言|築竹|狀犬|形彡|土土|損手|鄉邑|舍舌|農辰|矮矢|棟木|巴己|蹟足|晴日|族方|村木|拍手|搶手|精米|質貝|品口|閒門|互二|將寸|善口|角角",
+  "例人|創刀|礎石|基土|抽手|照火|符竹|雜隹|複衣|旦日|察宀|警言|員口|偷人|責貝|負貝|改攴|願頁|帥巾|幸干|零雨|萬艸|排手|量里|億人|止止|亞二|集隹|居尸|河水|麻麻|臭自|乎丿|脆肉|芒艸|冰冫|炎火|棒木|膩肉|窮穴|餘食|減水|養食|源水|資貝|竟音|汙水|府广|植木|肥肉|貼貝|謎言|觀見|俗人|宵宀|曆日|戲戈|籠竹|猜犬|案木|禁示|群羊|飢食|缺缶|裕衣|富宀|捐手|珍玉|營火|擴手|項頁|吹口|微彳|錄金|里里|踏足|勵力|鼓鼓|牌片|耐而|寶宀|宮宀|皇白|朝月|紫糸|憶心|栩木|幅巾|刻刀|玉玉|務力|衫衣|摸手|挑手|髮髟|光儿|券刀|銷金|促人|購貝",
+  "登癶|樓木|入入|層尸|提手|描手|堂土|絕糸|押手|韻音|設言|計言|窄穴|寬宀|尚小|甚甘|布巾|薄艸|悶心|髒骨|趕走|飲食|神示|氏氏|與臼|泡水|壺士|區匸|展尸|藥艸|製衣|廢广|誌言|聰耳|研石|究穴|瓶瓦|罐缶|鋪金|斷斤|孔子|祈示|福示|戚戈|燃火|充儿|溪水|緩糸|壯士|未木|吵口|脾肉|衛行|控手|制刀|緒糸|熬火|既无|諒言|奧大|旗方|徵彳|誠言|態心|操手|銀金|銅金|獎大|眾目|之丿|遞辵|絲糸|綢糸|瓷瓦|器口|貿貝|範竹|圍囗|繁糸|唐口|強弓|坊土|則刀|座广|超走|糯米|氛气|曬日|衝行|躺身|氧气|筒竹|棄木|趴足|板木|衡行|掉手|鼠鼠|蛇虫|猴犬|棕木|橙木|藍艸|灰火"
+];
+
+const RADICAL_MAP = {};
+RADICAL_DATA.forEach(row => {
+  row.split('|').forEach(pair => {
+    if (pair.length >= 2) RADICAL_MAP[pair[0]] = pair.slice(1);
   });
 });
 
+const DICTIONARY = {};
+RAW_DICT_CHUNKS.forEach(chunk => {
+  chunk.split('_').forEach(item => {
+    const [ch, z, p, s, w, e, c, r] = item.split('|');
+    if (ch) {
+      DICTIONARY[ch] = { 
+        zhuyin: z, 
+        pinyin: p, 
+        strokes: s, 
+        words: w, 
+        english: e, 
+        sentence: c, 
+        radical: r || RADICAL_MAP[ch] || "—" 
+      };
+    }
+  });
+});
+// ==================== 【第 1 段結束】 ====================
+// ==================== 【第 2 段開始】 ====================
 const I18N = {
   zh: {
     title: "華語甜點碰碰樂", textbook: "📖 學華語向前走", subtitle: "快來輸入名字，開啟馬卡龍課程！", namePlaceholder: "你的名字...", startClass: "開始上課！", installMsg: "📱 安裝 / 加入書籤", howToPlay: "遊戲說明",
@@ -295,7 +328,7 @@ const getInitialLesson = () => {
   return 's-zodiac';
 };
 
-// 🔥 Firebase Initialization (Re-added to fix ReferenceError: auth is not defined)
+// 🔥 Firebase Initialization
 let db, auth;
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; 
 
@@ -608,7 +641,6 @@ export default function App() {
   // 停用滑鼠右鍵選單
   useEffect(() => {
     const handleContextMenu = (e) => {
-      // 允許在「輸入框 (input)」、「文字區域 (textarea)」和「可編輯元素 (contenteditable)」使用右鍵，以便複製貼上
       const target = e.target;
       if (
         target.tagName === 'INPUT' || 
@@ -1068,11 +1100,9 @@ export default function App() {
       rawPlayers.forEach(p => {
          if (!p.name || !p.lesson) return;
          const key = `${p.name}_${p.lesson}`;
-         // 如果這個組合還沒記錄過，或是分數更高，就更新它
          if (!bestScores[key] || Number(p.score) > Number(bestScores[key].score)) {
              bestScores[key] = p;
          } else if (Number(p.score) === Number(bestScores[key].score)) {
-             // 如果分數一樣，保留上線時間較近的紀錄，讓「在線」狀態更準確
              const currentLastSeen = bestScores[key].lastSeen?.toMillis?.() || 0;
              const newLastSeen = p.lastSeen?.toMillis?.() || 0;
              if (newLastSeen > currentLastSeen) {
@@ -1142,12 +1172,14 @@ export default function App() {
     const dictKey = isEmoji ? PRONUNCIATION_MAP[char] : char;
     
     const baseInfo = DICTIONARY[dictKey] || {};
-    const defaultInfo = { zhuyin: "—", pinyin: "—", strokes: "—", words: "—", sentence: "—", english: "—" };
+    const defaultInfo = { zhuyin: "—", pinyin: "—", radical: RADICAL_MAP[dictKey] || "—", strokes: "—", words: "—", sentence: "—", english: "—" };
     if (baseInfo.z) defaultInfo.zhuyin = baseInfo.z; if (baseInfo.p) defaultInfo.pinyin = baseInfo.p; if (baseInfo.s) defaultInfo.strokes = baseInfo.s;
     if (baseInfo.w) defaultInfo.words = baseInfo.w; if (baseInfo.e) defaultInfo.english = baseInfo.e; if (baseInfo.c) defaultInfo.sentence = baseInfo.c;
+    if (baseInfo.r) defaultInfo.radical = baseInfo.r;
     if (baseInfo.zhuyin) defaultInfo.zhuyin = baseInfo.zhuyin; if (baseInfo.pinyin) defaultInfo.pinyin = baseInfo.pinyin;
     if (baseInfo.strokes) defaultInfo.strokes = baseInfo.strokes; if (baseInfo.words) defaultInfo.words = baseInfo.words;
     if (baseInfo.english) defaultInfo.english = baseInfo.english; if (baseInfo.sentence) defaultInfo.sentence = baseInfo.sentence;
+    if (baseInfo.radical) defaultInfo.radical = baseInfo.radical;
 
     const info = { ...defaultInfo, ...(customDictEdits[char] || {}) };
     const pinyinZ = (customDictEdits[char] && customDictEdits[char].pinyin !== undefined) ? customDictEdits[char].pinyin : (ZHUYIN_PINYIN_MAP[char] || "");
@@ -1218,6 +1250,7 @@ export default function App() {
                 <div className="flex items-start w-full"><span className="font-bold shrink-0 mr-1 text-gray-800">注音:</span> <span className="font-medium text-black break-words whitespace-normal outline-none hover:bg-gray-100 px-0.5 rounded cursor-text flex-1" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'zhuyin', e.currentTarget.textContent)}>{info.zhuyin}</span></div>
                 <div className="flex items-start w-full"><span className="font-bold shrink-0 mr-1 text-gray-800">拼音:</span> <span className="font-medium text-black break-words whitespace-normal outline-none hover:bg-gray-100 px-0.5 rounded cursor-text flex-1" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'pinyin', e.currentTarget.textContent)}>{info.pinyin}</span></div>
                 <div className="flex items-start w-full"><span className="font-bold shrink-0 mr-1 text-gray-800">英文:</span> <span className="font-medium text-black break-words whitespace-normal outline-none hover:bg-gray-100 px-0.5 rounded cursor-text flex-1" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'english', e.currentTarget.textContent)}>{info.english}</span></div>
+                <div className="flex items-start w-full"><span className="font-bold shrink-0 mr-1 text-gray-800">部首:</span> <span className="font-medium text-black outline-none hover:bg-gray-100 px-0.5 rounded cursor-text flex-1" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'radical', e.currentTarget.textContent)}>{info.radical !== "—" ? info.radical : "—"}</span></div>
                 <div className="flex items-start w-full"><span className="font-bold shrink-0 mr-1 text-gray-800">筆畫:</span> <span className="font-medium text-black outline-none hover:bg-gray-100 px-0.5 rounded cursor-text flex-1" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'strokes', e.currentTarget.textContent)}>{info.strokes !== "—" ? info.strokes : "—"}</span></div>
                 <div className="flex items-start w-full"><span className="font-bold shrink-0 mr-1 text-gray-800">造詞:</span> <span className="font-medium text-black break-words whitespace-normal outline-none hover:bg-gray-100 px-0.5 rounded cursor-text flex-1" contentEditable suppressContentEditableWarning onBlur={(e) => handleEditDict(char, 'words', e.currentTarget.textContent)}>{info.words}</span></div>
                 <div className="flex flex-col pt-0.5 w-full">
@@ -1229,7 +1262,8 @@ export default function App() {
         </div>
     );
   };
-
+// ==================== 【第 2 段結束】 ====================
+// ==================== 【第 3 段開始】 ====================
   return (
     <>
       <div className="min-h-screen bg-pink-50 flex flex-col font-sans select-none overflow-hidden text-black print:hidden relative">
@@ -1931,7 +1965,7 @@ export default function App() {
                               <h1 className="text-2xl font-black text-center mb-2 text-gray-800">{getLessonName(actualPrintLesson, t)} - 生字卡</h1>
                               <p className="text-center text-gray-500 text-sm mb-6">
                                 💡 提示：列印後剪下外框，沿著中間虛線對折，即可變為雙面圓角字卡！<br/>
-                                ✏️ <b>自訂編輯：</b>您可以直接「點擊」預覽畫面中的各項文字（拼音、造句等）來修改內容，再進行列印喔！
+                                ✏️ <b>自訂編輯：</b>您可以直接「點擊」預覽畫面中的各項文字（拼音、部首、造句等）來修改內容，再進行列印喔！
                               </p>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                   {allCharsForPrint.map((char, index) => renderCard(char, index))}
@@ -1986,7 +2020,7 @@ export default function App() {
             .print\\:hidden { display: none !important; }
             .print\\:block { display: block !important; }
             .print\\:text-\\[75px\\] { font-size: 75px !important; }
-            .print\\:text-\\[110px\\] { font-size: 110px !important; }
+            .print\\:text-\\[110px\------------- { font-size: 110px !important; }
             .print\\:text-\\[45px\\] { font-size: 45px !important; }
             .print\\:text-\\[60px\\] { font-size: 60px !important; }
             .print\\:text-\\[24px\\] { font-size: 24px !important; }
@@ -1996,3 +2030,4 @@ export default function App() {
     </>
   );
 }
+// ==================== 【第 3 段結束】 ====================
